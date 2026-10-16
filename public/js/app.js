@@ -123,8 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAcknowledgeRules = document.getElementById('btnAcknowledgeRules');
   const toastContainer = document.getElementById('toastContainer');
 
+  // Avatar HTML Renderer (supports emojis & custom image avatars)
+  function renderAvatarHtml(avatar, sizeClass = 'w-6 h-6 text-sm') {
+    if (!avatar) return '🐰';
+    if (avatar.startsWith('/') || avatar.includes('custom_avatar') || avatar.startsWith('http') || avatar.startsWith('data:')) {
+      return `<img src="${avatar}" alt="Avatar" class="${sizeClass} object-cover rounded-full inline-block pointer-events-none" />`;
+    }
+    return `<span class="inline-flex items-center justify-center">${avatar}</span>`;
+  }
+
   // Setup saved avatar
-  lobbyAvatarDisplay.textContent = selectedAvatar;
+  lobbyAvatarDisplay.innerHTML = renderAvatarHtml(selectedAvatar, 'w-16 h-16 text-3xl');
   const savedName = localStorage.getItem('noitu_nickname');
   if (savedName) inputNickname.value = savedName;
 
@@ -233,8 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
   avatarPicker.addEventListener('click', (e) => {
     const btn = e.target.closest('.avatar-option');
     if (btn) {
-      selectedAvatar = btn.textContent.trim();
-      lobbyAvatarDisplay.textContent = selectedAvatar;
+      selectedAvatar = btn.dataset.avatar || btn.textContent.trim();
+      lobbyAvatarDisplay.innerHTML = renderAvatarHtml(selectedAvatar, 'w-16 h-16 text-3xl');
       localStorage.setItem('noitu_avatar', selectedAvatar);
       window.soundManager.playPop();
     }
@@ -557,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
       item.innerHTML = `
         <div class="flex items-center space-x-2.5 min-w-0">
-          <span class="text-xl flex-shrink-0">${p.avatar}</span>
+          <span class="flex-shrink-0 flex items-center justify-center w-7 h-7">${renderAvatarHtml(p.avatar, 'w-7 h-7 text-xl')}</span>
           <div class="min-w-0">
             <div class="text-xs sm:text-sm font-semibold text-slate-900 flex items-center space-x-1.5 truncate">
               <span class="truncate">${p.nickname}</span>
@@ -608,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const activePlayer = room.players[room.turnIndex];
     if (activePlayer) {
-      activePlayerAvatar.textContent = activePlayer.avatar;
+      activePlayerAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-5 h-5 text-sm');
       activePlayerName.textContent = `@${activePlayer.nickname}`;
     }
 
@@ -626,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : 'bg-red-50 border-red-200 text-red-500 opacity-60'
       }`;
       badge.innerHTML = `
-        <span>${p.avatar}</span>
+        <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-4 h-4 text-xs')}</span>
         <span class="max-w-[70px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
         ${p.isAlive ? '<span class="text-emerald-500 text-[8px]">●</span>' : '<span class="text-red-500 text-[8px]">×</span>'}
         <span class="text-[10px] text-slate-400 font-mono">(${p.score})</span>
@@ -654,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (activePlayer && room.status === 'playing') {
-        typingAvatar.textContent = activePlayer.avatar;
+        typingAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-4 h-4 text-xs');
         typingText.textContent = `${activePlayer.nickname} đang suy nghĩ...`;
         typingIndicator.classList.remove('hidden');
       } else {
@@ -729,8 +738,8 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs flex-shrink-0">
-          ${avatar}
+        <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs flex-shrink-0 overflow-hidden">
+          ${renderAvatarHtml(avatar, 'w-full h-full text-xs')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
           <span class="text-[10px] text-slate-500 ml-1 mb-0.5">${nickname}</span>
@@ -794,7 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.innerHTML = `
         <div class="flex items-center space-x-2 min-w-0">
           <span class="w-5 font-bold text-center text-xs text-slate-400">#${item.rank}</span>
-          <span class="text-base flex-shrink-0">${item.avatar}</span>
+          <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center">${renderAvatarHtml(item.avatar, 'w-6 h-6 text-sm')}</span>
           <span class="text-xs font-semibold text-slate-800 truncate max-w-[130px]">${item.nickname}</span>
         </div>
         <span class="text-xs font-bold text-blue-600 font-mono">${item.score} đ</span>
@@ -836,33 +845,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1st place
     if (p1) {
-      podium1Avatar.textContent = p1.avatar;
+      podium1Avatar.innerHTML = renderAvatarHtml(p1.avatar, 'w-10 h-10 text-2xl');
       podium1Name.textContent = `@${p1.nickname}`;
       podium1Score.textContent = `${p1.score} đ`;
     } else {
-      podium1Avatar.textContent = '👑';
+      podium1Avatar.innerHTML = '👑';
       podium1Name.textContent = '---';
       podium1Score.textContent = '0 đ';
     }
 
     // 2nd place
     if (p2) {
-      podium2Avatar.textContent = p2.avatar;
+      podium2Avatar.innerHTML = renderAvatarHtml(p2.avatar, 'w-9 h-9 text-xl');
       podium2Name.textContent = `@${p2.nickname}`;
       podium2Score.textContent = `${p2.score} đ`;
     } else {
-      podium2Avatar.textContent = '🥈';
+      podium2Avatar.innerHTML = '🥈';
       podium2Name.textContent = '---';
       podium2Score.textContent = '0 đ';
     }
 
     // 3rd place
     if (p3) {
-      podium3Avatar.textContent = p3.avatar;
+      podium3Avatar.innerHTML = renderAvatarHtml(p3.avatar, 'w-9 h-9 text-xl');
       podium3Name.textContent = `@${p3.nickname}`;
       podium3Score.textContent = `${p3.score} đ`;
     } else {
-      podium3Avatar.textContent = '🥉';
+      podium3Avatar.innerHTML = '🥉';
       podium3Name.textContent = '---';
       podium3Score.textContent = '0 đ';
     }
@@ -876,7 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
       item.innerHTML = `
         <div class="flex items-center space-x-2">
           <span class="text-slate-400 font-semibold">#${p.rank}</span>
-          <span>${p.avatar}</span>
+          <span class="w-5 h-5 flex items-center justify-center flex-shrink-0">${renderAvatarHtml(p.avatar, 'w-5 h-5 text-xs')}</span>
           <span class="font-medium text-slate-700 truncate max-w-[120px]">${p.nickname}</span>
         </div>
         <span class="font-semibold text-slate-600 font-mono">${p.score} đ</span>
