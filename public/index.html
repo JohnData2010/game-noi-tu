@@ -24,8 +24,9 @@
       }
     }
   </script>
-</head>
-<body class="bg-slate-100 text-slate-800 flex flex-col font-sans antialiased select-none overflow-hidden">
+<body class="bg-slate-100 text-slate-800 font-sans antialiased select-none overflow-hidden">
+
+  <div id="appWrapper" class="app-layout">
 
   <!-- ================= TOP NAVIGATION BAR ================= -->
   <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-2.5 sm:px-4 z-40 flex-shrink-0 shadow-sm gap-2">
@@ -69,10 +70,10 @@
   </header>
 
   <!-- ================= MAIN CONTAINER ================= -->
-  <main class="mobile-app-container flex-1 flex flex-col relative max-w-2xl w-full mx-auto p-2 sm:p-3 overflow-hidden">
+  <main class="flex-1 min-h-0 flex flex-col relative max-w-2xl w-full mx-auto p-2 sm:p-3 overflow-hidden">
 
     <!-- VIEW 1: LOBBY -->
-    <section id="viewLobby" class="flex-1 flex items-center justify-center p-2 overflow-y-auto">
+    <section id="viewLobby" class="flex-1 min-h-0 flex items-center justify-center p-2 overflow-y-auto">
       <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4 my-auto">
         
         <!-- Player Profile -->
@@ -186,7 +187,7 @@
     </section>
 
     <!-- VIEW 2: WAITING ROOM -->
-    <section id="viewWaitingRoom" class="hidden flex-1 flex flex-col items-center justify-center p-2 overflow-y-auto">
+    <section id="viewWaitingRoom" class="hidden flex-1 min-h-0 flex flex-col items-center justify-center p-2 overflow-y-auto">
       <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4 my-auto">
         
         <!-- Header Info -->
@@ -243,7 +244,7 @@
     </section>
 
     <!-- VIEW 3: ACTIVE GAME BOARD -->
-    <section id="viewGame" class="hidden flex-1 flex flex-col overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm relative">
+    <section id="viewGame" class="hidden flex-1 min-h-0 flex flex-col overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm relative">
       
       <!-- Top Game Status Bar -->
       <div class="bg-white border-b border-slate-200 p-2.5 sm:p-3 space-y-2 z-10 flex-shrink-0">
@@ -288,7 +289,7 @@
       </div>
 
       <!-- Messenger Chat Feed -->
-      <div id="chatFeed" class="flex-1 overflow-y-auto p-3 space-y-2.5 bg-slate-50 scroll-smooth"></div>
+      <div id="chatFeed" class="flex-1 min-h-0 overflow-y-auto p-3 space-y-2.5 bg-slate-50 scroll-smooth"></div>
 
       <!-- Typing Indicator -->
       <div id="typingIndicator" class="hidden px-3.5 py-1.5 text-xs sm:text-sm text-slate-500 italic bg-white border-t border-slate-100 flex items-center space-x-1.5">
@@ -332,6 +333,7 @@
     </section>
 
   </main>
+  </div> <!-- end #appWrapper -->
 
   <!-- ================= MODAL: ROUND END ================= -->
   <div id="modalRoundEnd" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">

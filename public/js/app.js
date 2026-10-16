@@ -144,22 +144,85 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedName = localStorage.getItem('noitu_nickname');
   if (savedName) inputNickname.value = savedName;
 
-  // ================= MOBILE VIEWPORT HANDLING =================
-  function updateViewportHeight() {
-    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    document.documentElement.style.setProperty('--vvh', `${vh}px`);
+  // ================= MOBILE VIEWPORT & KEYBOARD FIX =================
+  const rootStyle = document.documentElement.style;
+
+  function updateViewport() {
+    const vv = window.visualViewport;
+    const height = vv ? vv.height : window.innerHeight;
+    const top = vv ? vv.offsetTop : 0;
+
+    rootStyle.setProperty('--vv-height', `${height}px`);
+    rootStyle.setProperty('--vv-top', `${top}px`);
+    rootStyle.setProperty('--vvh', `${height}px`);
+
+    // Detect if virtual keyboard is open (viewport height shrunk significantly)
+    const isKeyboardOpen = vv ? (window.innerHeight - vv.height > 120) : false;
+    document.body.classList.toggle('keyboard-open', isKeyboardOpen);
+
+    // Force window scroll back to 0 to prevent iOS layout offset
+    if (window.scrollY !== 0 || window.scrollX !== 0) {
+      window.scrollTo(0, 0);
+    }
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+
     if (chatFeed) {
       chatFeed.scrollTop = chatFeed.scrollHeight;
     }
   }
 
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updateViewportHeight);
-    window.visualViewport.addEventListener('scroll', updateViewportHeight);
+    window.visualViewport.addEventListener('resize', updateViewport);
+    window.visualViewport.addEventListener('scroll', () => {
+      updateViewport();
+      window.scrollTo(0, 0);
+    });
   }
-  window.addEventListener('resize', updateViewportHeight);
-  window.addEventListener('orientationchange', () => setTimeout(updateViewportHeight, 200));
-  updateViewportHeight();
+  window.addEventListener('resize', updateViewport);
+  window.addEventListener('orientationchange', () => setTimeout(updateViewport, 200));
+  window.addEventListener('scroll', () => {
+    if (window.scrollY !== 0 || window.scrollX !== 0) {
+      window.scrollTo(0, 0);
+    }
+  });
+  updateViewport();
+
+  // Reset any layout shift on focus and blur across all text inputs
+  [inputWord, inputNickname, inputRoomCode].forEach(input => {
+    if (!input) return;
+    input.addEventListener('focus', () => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        updateViewport();
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        updateViewport();
+      }, 250);
+    });
+
+    input.addEventListener('blur', () => {
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        updateViewport();
+      }, 100);
+    });
+  });
+
+  // Tap on chat feed dismisses virtual keyboard
+  if (chatFeed) {
+    chatFeed.addEventListener('touchstart', () => {
+      if (document.activeElement === inputWord) {
+        inputWord.blur();
+      }
+    }, { passive: true });
+  }
 
   function syncRoomSession() {
     const savedRoomId = sessionStorage.getItem('noitu_room_id') || localStorage.getItem('noitu_room_id');
@@ -176,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      updateViewportHeight();
+      updateViewport();
       if (!socket.connected) {
         socket.connect();
       } else {
