@@ -148,20 +148,15 @@
 
             <!-- Turn time limit selection -->
             <div class="space-y-1.5">
-              <div class="flex items-center justify-between">
-                <label class="text-sm font-bold text-slate-700">Thời gian mỗi lượt</label>
-                <div class="inline-flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-bold">
-                  <button type="button" id="btnTimerToggleOn" class="px-2.5 py-1 rounded-md bg-white text-slate-900 shadow-xs transition">Bấm giờ</button>
-                  <button type="button" id="btnTimerToggleOff" class="px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-900 transition">Không tính giờ</button>
-                </div>
+              <label class="block text-sm font-bold text-slate-700">Thời gian mỗi lượt</label>
+              <div id="timerDurationsRow" class="grid grid-cols-4 gap-1.5">
+                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-blue-600 bg-blue-50 text-blue-700" data-time="0">Không tính giờ</button>
+                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="10">10 giây</button>
+                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="15">15 giây</button>
+                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="20">20 giây</button>
               </div>
-              <div id="timerDurationsRow" class="grid grid-cols-3 gap-1.5">
-                <button type="button" class="btn-time-opt py-2 rounded-xl text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="10">10 giây</button>
-                <button type="button" class="btn-time-opt py-2 rounded-xl text-sm font-bold border border-blue-600 bg-blue-50 text-blue-700" data-time="15">15 giây</button>
-                <button type="button" class="btn-time-opt py-2 rounded-xl text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="20">20 giây</button>
-              </div>
-              <div id="noTimerNotice" class="hidden p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs sm:text-sm text-slate-600 font-semibold">
-                ✨ Vô hạn thời gian suy nghĩ (không bị xử thua do hết giờ)
+              <div id="noTimerNotice" class="p-2 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs sm:text-sm text-slate-600 font-semibold">
+                ✨ Vô hạn thời gian suy nghĩ (không tính giờ)
               </div>
             </div>
 

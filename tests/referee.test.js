@@ -66,4 +66,17 @@ assert.strictEqual(test11.code, 'PROFANITY_FORBIDDEN');
 assert.strictEqual(test11.reason, 'Từ ngữ vi phạm chuẩn mực văn hóa (tục tĩu, nhạy cảm)!');
 console.log('✓ Rejects profanity and vulgar terms');
 
+// Test 8: Real-life action-object compounds & modern words
+const test12 = referee.validate('trồng cây', 'trồng', new Set(['trời trồng']));
+assert.strictEqual(test12.valid, true, 'Should accept "trồng cây" after "trồng"');
+console.log('✓ Accepts "trồng cây" after "trồng"');
+
+const test13 = referee.validate('cây xanh', 'cây', new Set(['trồng cây']));
+assert.strictEqual(test13.valid, true, 'Should accept "cây xanh" after "cây"');
+console.log('✓ Accepts "cây xanh" after "cây"');
+
+const test14 = referee.validate('bắt trend', 'bắt', new Set());
+assert.strictEqual(test14.valid, true, 'Should accept modern word "bắt trend"');
+console.log('✓ Accepts modern word "bắt trend"');
+
 console.log('All Referee tests passed successfully! 🎉');

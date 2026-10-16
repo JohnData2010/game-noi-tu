@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let mySessionToken = sessionStorage.getItem('noitu_session_token') || null;
   let currentRoom = null;
   let selectedAvatar = localStorage.getItem('noitu_avatar') || '🐰';
-  let turnDuration = 15;
+  let turnDuration = 0; // Default: Không tính giờ (unlimited time)
   let selectedRounds = 3;
   let selectedGameMode = 'rounds'; // 'rounds' | 'battle_royale'
   let isSoundEnabled = true;
@@ -54,12 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const roundsSelectionGroup = document.getElementById('roundsSelectionGroup');
   const brDescGroup = document.getElementById('brDescGroup');
 
-  // Timer Toggle Elements
-  const btnTimerToggleOn = document.getElementById('btnTimerToggleOn');
-  const btnTimerToggleOff = document.getElementById('btnTimerToggleOff');
+  // Timer Elements
   const timerDurationsRow = document.getElementById('timerDurationsRow');
   const noTimerNotice = document.getElementById('noTimerNotice');
-  let isTimerEnabled = true;
+  let isTimerEnabled = false;
 
   // Waiting Room Elements
   const waitingRoomCode = document.getElementById('waitingRoomCode');
@@ -381,40 +379,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Timer Toggle (Bấm giờ / Không tính giờ)
-  if (btnTimerToggleOn && btnTimerToggleOff) {
-    btnTimerToggleOn.addEventListener('click', () => {
-      isTimerEnabled = true;
-      btnTimerToggleOn.className = 'px-2 py-0.5 rounded-md bg-white text-slate-800 shadow-xs transition';
-      btnTimerToggleOff.className = 'px-2 py-0.5 rounded-md text-slate-500 hover:text-slate-800 transition';
-      timerDurationsRow.classList.remove('hidden');
-      noTimerNotice.classList.add('hidden');
-      const activeBtn = document.querySelector('.btn-time-opt.border-blue-600') || document.querySelector('.btn-time-opt');
-      turnDuration = activeBtn ? parseInt(activeBtn.dataset.time, 10) : 15;
-      window.soundManager.playPop();
-    });
-
-    btnTimerToggleOff.addEventListener('click', () => {
-      isTimerEnabled = false;
-      btnTimerToggleOff.className = 'px-2 py-0.5 rounded-md bg-white text-slate-800 shadow-xs transition';
-      btnTimerToggleOn.className = 'px-2 py-0.5 rounded-md text-slate-500 hover:text-slate-800 transition';
-      timerDurationsRow.classList.add('hidden');
-      noTimerNotice.classList.remove('hidden');
-      turnDuration = 0;
-      window.soundManager.playPop();
-    });
-  }
-
-  // Time options toggle
+  // Turn Time Selection (0s: Không tính giờ, 10s, 15s, 20s)
   document.querySelectorAll('.btn-time-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-time-opt').forEach(b => {
-        b.className = 'btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300';
+        b.className = 'btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300';
       });
-      btn.className = 'btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700';
+      btn.className = 'btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-blue-600 bg-blue-50 text-blue-700';
       turnDuration = parseInt(btn.dataset.time, 10);
-      if (!isTimerEnabled && btnTimerToggleOn) {
-        btnTimerToggleOn.click();
+      isTimerEnabled = turnDuration > 0;
+      if (turnDuration === 0) {
+        noTimerNotice.textContent = '✨ Vô hạn thời gian suy nghĩ (không tính giờ)';
+      } else {
+        noTimerNotice.textContent = `⏱ Mỗi lượt có ${turnDuration} giây để đưa ra từ nối.`;
       }
       window.soundManager.playPop();
     });

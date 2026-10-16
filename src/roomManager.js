@@ -39,8 +39,8 @@ class RoomManager {
 
     const gameMode = data.gameMode === 'battle_royale' ? 'battle_royale' : 'rounds';
     const maxRounds = gameMode === 'battle_royale' ? 1 : Math.min(10, Math.max(1, parseInt(data.maxRounds, 10) || 3));
-    const isUnlimited = data.turnDuration === 0 || data.turnDuration === '0' || data.isUnlimitedTime === true;
-    const turnDuration = isUnlimited ? 0 : Math.min(60, Math.max(5, parseInt(data.turnDuration, 10) || 15));
+    const isExplicitTime = data.turnDuration !== undefined && data.turnDuration !== null && data.turnDuration !== 0 && data.turnDuration !== '0' && data.isUnlimitedTime !== true;
+    const turnDuration = isExplicitTime ? Math.min(60, Math.max(5, parseInt(data.turnDuration, 10) || 15)) : 0;
     const room = {
       id: roomId,
       hostId: socket.id,
@@ -217,7 +217,7 @@ class RoomManager {
       room.roundNumber = 0;
       room.podium = null;
       room.turnCount = 0;
-      room.turnDuration = room.initialTurnDuration !== undefined ? room.initialTurnDuration : 15;
+      room.turnDuration = room.initialTurnDuration !== undefined ? room.initialTurnDuration : 0;
       for (const p of room.players) {
         p.score = 0;
         p.wordsCount = 0;
