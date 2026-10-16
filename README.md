@@ -1,6 +1,8 @@
-# 🎮 Game Nối Từ Tiếng Việt Multiplayer (Đấu Trường Từ Vựng Online)
+# 🎮 Nối Từ Ba Chị Em (Game Nối Từ Tiếng Việt Multiplayer)
 
-Ứng dụng Game Nối Từ (Word Chain) thời gian thực dành cho **nhiều người chơi (Multiplayer)** với giao diện tương tác dạng **Messenger Chat** và **Hệ thống Trọng tài Tự động (Referee Engine)** khắt khe, công minh.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/JohnData2010/game-noi-tu)
+
+Ứng dụng Game Nối Từ (Word Chain) thời gian thực dành cho **nhiều người chơi (Multiplayer)** với giao diện Messenger Light Mode tối giản và **Hệ thống Trọng tài Tự động (Referee Engine)** khắt khe, công minh.
 
 ![Giao diện Nối Từ Pro](https://raw.githubusercontent.com/NNBnh/noi-tu/master/logo.svg)
 
