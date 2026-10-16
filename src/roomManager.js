@@ -39,7 +39,8 @@ class RoomManager {
 
     const gameMode = data.gameMode === 'battle_royale' ? 'battle_royale' : 'rounds';
     const maxRounds = gameMode === 'battle_royale' ? 1 : Math.min(10, Math.max(1, parseInt(data.maxRounds, 10) || 3));
-    const turnDuration = Math.min(30, Math.max(5, parseInt(data.turnDuration, 10) || 15));
+    const isUnlimited = data.turnDuration === 0 || data.turnDuration === '0' || data.isUnlimitedTime === true;
+    const turnDuration = isUnlimited ? 0 : Math.min(60, Math.max(5, parseInt(data.turnDuration, 10) || 15));
     const room = {
       id: roomId,
       hostId: socket.id,
@@ -90,6 +91,7 @@ class RoomManager {
           clearTimeout(existing.disconnectTimeout);
           existing.disconnectTimeout = null;
         }
+        const wasDisconnected = existing.isDisconnected;
         existing.id = socket.id;
         existing.isDisconnected = false;
         if (existing.isHost) room.hostId = socket.id;
@@ -100,6 +102,18 @@ class RoomManager {
 
         socket.emit('session_created', { sessionToken: existing.sessionToken, roomId });
         this.broadcastRoomUpdate(room);
+
+        // Sync active timer state if match is ongoing
+        if (room.status === 'playing') {
+          socket.emit('timer_tick', {
+            timeRemaining: room.timeRemaining || 0,
+            totalDuration: room.turnDuration || 0,
+            isUnlimited: room.turnDuration === 0
+          });
+          if (wasDisconnected) {
+            this.sendRefereeMessage(roomId, `✅ @${existing.nickname} đã kết nối lại.`);
+          }
+        }
         return room;
       }
     }
@@ -203,7 +217,7 @@ class RoomManager {
       room.roundNumber = 0;
       room.podium = null;
       room.turnCount = 0;
-      room.turnDuration = room.initialTurnDuration || 15;
+      room.turnDuration = room.initialTurnDuration !== undefined ? room.initialTurnDuration : 15;
       for (const p of room.players) {
         p.score = 0;
         p.wordsCount = 0;
@@ -255,18 +269,30 @@ class RoomManager {
 
   startTurnTimer(room) {
     this.clearTurnTimer(room);
-    room.timeRemaining = room.turnDuration;
 
+    if (!room.turnDuration || room.turnDuration <= 0) {
+      room.timeRemaining = 0;
+      this.io.to(room.id).emit('timer_tick', {
+        timeRemaining: 0,
+        totalDuration: 0,
+        isUnlimited: true
+      });
+      return;
+    }
+
+    room.timeRemaining = room.turnDuration;
     this.io.to(room.id).emit('timer_tick', {
       timeRemaining: room.timeRemaining,
-      totalDuration: room.turnDuration
+      totalDuration: room.turnDuration,
+      isUnlimited: false
     });
 
     room.timer = setInterval(() => {
       room.timeRemaining -= 1;
       this.io.to(room.id).emit('timer_tick', {
         timeRemaining: room.timeRemaining,
-        totalDuration: room.turnDuration
+        totalDuration: room.turnDuration,
+        isUnlimited: false
       });
 
       if (room.timeRemaining <= 0) {
@@ -460,7 +486,7 @@ class RoomManager {
   }
 
   advanceTurn(room, isNewWord = true) {
-    if (room.gameMode === 'battle_royale' && isNewWord) {
+    if (room.gameMode === 'battle_royale' && isNewWord && room.turnDuration > 0) {
       room.turnCount = (room.turnCount || 0) + 1;
       const aliveCount = room.players.filter(p => p.isAlive).length;
       if (room.turnCount % Math.max(2, aliveCount) === 0 && room.turnDuration > 5) {
@@ -543,7 +569,12 @@ class RoomManager {
       usedWordsCount: room.usedWords.size,
       roundNumber: room.roundNumber,
       maxRounds: room.maxRounds,
-      winner: room.winner,
+      winner: room.winner ? {
+        id: room.winner.id,
+        nickname: room.winner.nickname,
+        avatar: room.winner.avatar,
+        score: room.winner.score || 0
+      } : null,
       podium: room.podium,
       players: room.players.map(p => ({
         id: p.id,
@@ -577,7 +608,7 @@ class RoomManager {
     leavingPlayer.isDisconnected = true;
 
     if (room.status === 'waiting') {
-      // 5-second grace period in waiting lobby (e.g. user briefly copies room link in another app)
+      // 120-second grace period in waiting lobby (switching apps to invite friends, etc.)
       leavingPlayer.disconnectTimeout = setTimeout(() => {
         if (!leavingPlayer.isDisconnected) return;
         const curIndex = room.players.findIndex(p => p.sessionToken === leavingPlayer.sessionToken);
@@ -598,17 +629,21 @@ class RoomManager {
         }
         this.sendRefereeMessage(roomId, `${leavingPlayer.avatar} ${leavingPlayer.nickname} đã rời phòng.`);
         this.broadcastRoomUpdate(room);
-      }, 5000);
+      }, 120000);
     } else if (room.status === 'playing') {
-      // 15-second grace period during live match for mobile network handoff
-      this.sendRefereeMessage(roomId, `⚠️ ${leavingPlayer.avatar} @${leavingPlayer.nickname} gián đoạn mạng (có 15s để kết nối lại)...`);
+      // 120-second grace period during live match for switching tabs/apps
+      setTimeout(() => {
+        if (leavingPlayer.isDisconnected && room.status === 'playing') {
+          this.sendRefereeMessage(roomId, `⚠️ @${leavingPlayer.nickname} tạm gián đoạn mạng (đang chờ kết nối lại)...`);
+        }
+      }, 5000);
       this.broadcastRoomUpdate(room);
 
       leavingPlayer.disconnectTimeout = setTimeout(() => {
         if (!leavingPlayer.isDisconnected || room.status !== 'playing') return;
 
         leavingPlayer.isAlive = false;
-        this.sendRefereeMessage(roomId, `🚨 ${leavingPlayer.avatar} @${leavingPlayer.nickname} không thể kết nối lại và đã bị loại.`);
+        this.sendRefereeMessage(roomId, `🚨 @${leavingPlayer.nickname} mất kết nối quá 2 phút và đã bị loại.`);
 
         if (room.turnIndex === playerIndex) {
           this.advanceTurn(room, false);
@@ -619,12 +654,13 @@ class RoomManager {
             room.winner = winner;
             room.status = 'ended';
             this.clearTurnTimer(room);
-            this.io.to(room.id).emit('game_over', { winner });
-            this.sendRefereeMessage(room.id, `👑 ${winner.avatar} @${winner.nickname} chiến thắng vì tất cả đối thủ đã rời hoặc bị loại!`);
+            const winnerPayload = { id: winner.id, nickname: winner.nickname, avatar: winner.avatar, score: winner.score || 0 };
+            this.io.to(room.id).emit('game_over', { winner: winnerPayload });
+            this.sendRefereeMessage(room.id, `👑 ${winner.avatar} @${winner.nickname} chiến thắng vì đối thủ mất kết nối!`);
           }
           this.broadcastRoomUpdate(room);
         }
-      }, 15000);
+      }, 120000);
     }
   }
 }

@@ -54,6 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const roundsSelectionGroup = document.getElementById('roundsSelectionGroup');
   const brDescGroup = document.getElementById('brDescGroup');
 
+  // Timer Toggle Elements
+  const btnTimerToggleOn = document.getElementById('btnTimerToggleOn');
+  const btnTimerToggleOff = document.getElementById('btnTimerToggleOff');
+  const timerDurationsRow = document.getElementById('timerDurationsRow');
+  const noTimerNotice = document.getElementById('noTimerNotice');
+  let isTimerEnabled = true;
+
   // Waiting Room Elements
   const waitingRoomCode = document.getElementById('waitingRoomCode');
   const btnShareRoomNative = document.getElementById('btnShareRoomNative');
@@ -154,12 +161,35 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('orientationchange', () => setTimeout(updateViewportHeight, 200));
   updateViewportHeight();
 
+  function syncRoomSession() {
+    const savedRoomId = sessionStorage.getItem('noitu_room_id') || localStorage.getItem('noitu_room_id');
+    const savedToken = sessionStorage.getItem('noitu_session_token') || localStorage.getItem('noitu_session_token');
+    if (savedRoomId && savedToken) {
+      socket.emit('join_room', {
+        roomId: savedRoomId,
+        sessionToken: savedToken,
+        nickname: localStorage.getItem('noitu_nickname') || 'Người chơi',
+        avatar: selectedAvatar
+      });
+    }
+  }
+
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       updateViewportHeight();
       if (!socket.connected) {
         socket.connect();
+      } else {
+        syncRoomSession();
       }
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      syncRoomSession();
     }
   });
 
@@ -282,6 +312,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Timer Toggle (Bấm giờ / Không tính giờ)
+  if (btnTimerToggleOn && btnTimerToggleOff) {
+    btnTimerToggleOn.addEventListener('click', () => {
+      isTimerEnabled = true;
+      btnTimerToggleOn.className = 'px-2 py-0.5 rounded-md bg-white text-slate-800 shadow-xs transition';
+      btnTimerToggleOff.className = 'px-2 py-0.5 rounded-md text-slate-500 hover:text-slate-800 transition';
+      timerDurationsRow.classList.remove('hidden');
+      noTimerNotice.classList.add('hidden');
+      const activeBtn = document.querySelector('.btn-time-opt.border-blue-600') || document.querySelector('.btn-time-opt');
+      turnDuration = activeBtn ? parseInt(activeBtn.dataset.time, 10) : 15;
+      window.soundManager.playPop();
+    });
+
+    btnTimerToggleOff.addEventListener('click', () => {
+      isTimerEnabled = false;
+      btnTimerToggleOff.className = 'px-2 py-0.5 rounded-md bg-white text-slate-800 shadow-xs transition';
+      btnTimerToggleOn.className = 'px-2 py-0.5 rounded-md text-slate-500 hover:text-slate-800 transition';
+      timerDurationsRow.classList.add('hidden');
+      noTimerNotice.classList.remove('hidden');
+      turnDuration = 0;
+      window.soundManager.playPop();
+    });
+  }
+
   // Time options toggle
   document.querySelectorAll('.btn-time-opt').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -290,6 +344,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       btn.className = 'btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700';
       turnDuration = parseInt(btn.dataset.time, 10);
+      if (!isTimerEnabled && btnTimerToggleOn) {
+        btnTimerToggleOn.click();
+      }
       window.soundManager.playPop();
     });
   });
@@ -326,7 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.emit('create_room', {
       nickname,
       avatar: selectedAvatar,
-      turnDuration,
+      turnDuration: isTimerEnabled ? turnDuration : 0,
+      isUnlimitedTime: !isTimerEnabled,
       maxRounds: selectedRounds,
       gameMode: selectedGameMode,
       sessionToken: mySessionToken
@@ -433,6 +491,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
       sessionStorage.removeItem('noitu_session_token');
       sessionStorage.removeItem('noitu_room_id');
+      localStorage.removeItem('noitu_session_token');
+      localStorage.removeItem('noitu_room_id');
+      currentRoom = null;
       window.location.href = '/';
     }
   });
@@ -492,34 +553,44 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================= SOCKET EVENT LISTENERS =================
   socket.on('connect', () => {
     myId = socket.id;
-
-    const savedRoomId = sessionStorage.getItem('noitu_room_id');
-    const savedToken = sessionStorage.getItem('noitu_session_token');
-    if (savedRoomId && savedToken && !currentRoom) {
-      socket.emit('join_room', {
-        roomId: savedRoomId,
-        sessionToken: savedToken,
-        nickname: localStorage.getItem('noitu_nickname') || 'Người chơi'
-      });
-    }
+    syncRoomSession();
   });
 
   socket.on('session_created', ({ sessionToken, roomId }) => {
     mySessionToken = sessionToken;
     sessionStorage.setItem('noitu_session_token', sessionToken);
     sessionStorage.setItem('noitu_room_id', roomId);
+    localStorage.setItem('noitu_session_token', sessionToken);
+    localStorage.setItem('noitu_room_id', roomId);
   });
 
   socket.on('error_message', (msg) => {
     showToast(msg, 'error');
     window.soundManager.playBuzzer();
+    if (msg.includes('không tồn tại') || msg.includes('giải tán')) {
+      sessionStorage.removeItem('noitu_session_token');
+      sessionStorage.removeItem('noitu_room_id');
+      localStorage.removeItem('noitu_session_token');
+      localStorage.removeItem('noitu_room_id');
+      currentRoom = null;
+      showView('lobby');
+    }
   });
 
   socket.on('room_updated', (room) => {
     currentRoom = room;
     navRoomCode.textContent = room.id;
     waitingRoomCode.textContent = room.id;
-    roomDurationBadge.textContent = `${room.turnDuration}s`;
+    if (room.turnDuration === 0) {
+      roomDurationBadge.textContent = 'Không tính giờ';
+      timerNumber.textContent = '∞';
+      timerNumber.className = 'text-sm sm:text-base font-bold text-slate-400 font-mono';
+      timerProgressBar.style.width = '100%';
+      timerProgressBar.className = 'h-full bg-slate-200 transition-all duration-300';
+      timerBox.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+    } else {
+      roomDurationBadge.textContent = `${room.turnDuration}s`;
+    }
     
     if (roomRoundsBadge) {
       roomRoundsBadge.textContent = room.gameMode === 'battle_royale' ? 'Battle Royale' : `${room.maxRounds} Hiệp`;
@@ -673,7 +744,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Timer Tick Event
-  socket.on('timer_tick', ({ timeRemaining, totalDuration }) => {
+  socket.on('timer_tick', ({ timeRemaining, totalDuration, isUnlimited }) => {
+    if (isUnlimited || totalDuration === 0) {
+      timerNumber.textContent = '∞';
+      timerNumber.className = 'text-sm sm:text-base font-bold text-slate-400 font-mono';
+      timerProgressBar.style.width = '100%';
+      timerProgressBar.className = 'h-full bg-slate-200 transition-all duration-300';
+      timerBox.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+      return;
+    }
+
     timerNumber.textContent = timeRemaining;
     const pct = Math.max(0, Math.min(100, (timeRemaining / totalDuration) * 100));
     timerProgressBar.style.width = `${pct}%`;
