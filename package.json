@@ -1,0 +1,23 @@
+{
+  "name": "game-noi-tu--",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/referee.test.js && node tests/simulation.test.js && node tests/mobile_reconnect.test.js && node tests/rounds_podium.test.js && node tests/battle_royale.test.js",
+    "build:dict": "node scripts/build-dictionary.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
+}

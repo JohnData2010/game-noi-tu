@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Nối Từ Ba Chị Em</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            appBlue: '#0084ff',
+            appHover: '#0073e6'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-800 flex flex-col font-sans antialiased select-none overflow-hidden">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-4 z-40 flex-shrink-0 shadow-sm">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-sm flex-shrink-0">
+        N
+      </div>
+      <div>
+        <h1 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Nối Từ Ba Chị Em</h1>
+      </div>
+    </div>
+
+    <!-- Center Room Badge -->
+    <div id="navRoomBadge" class="hidden items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3 py-1 rounded-full cursor-pointer transition active:scale-95" title="Nhấp để chia sẻ">
+      <span class="text-xs text-slate-500 font-medium">Phòng:</span>
+      <span id="navRoomCode" class="text-xs font-mono font-bold text-blue-600 tracking-wider">ABCDE</span>
+      <i data-lucide="share-2" class="w-3.5 h-3.5 text-slate-500"></i>
+    </div>
+
+    <div class="flex items-center space-x-1 sm:space-x-1.5">
+      <!-- Dict counter -->
+      <div class="hidden md:flex items-center space-x-1.5 bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs font-medium border border-slate-200">
+        <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span id="dictStats">52,800+ từ</span>
+      </div>
+
+      <!-- Sound toggle -->
+      <button id="btnSoundToggle" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95" title="Âm thanh">
+        <i id="iconSound" data-lucide="volume-2" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Rules toggle -->
+      <button id="btnOpenRules" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95" title="Luật chơi">
+        <i data-lucide="help-circle" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Exit room button -->
+      <button id="btnLeaveRoom" class="hidden px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-semibold transition active:scale-95">
+        Thoát
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="mobile-app-container flex-1 flex flex-col relative max-w-2xl w-full mx-auto p-2 sm:p-3 overflow-hidden">
+
+    <!-- VIEW 1: LOBBY -->
+    <section id="viewLobby" class="flex-1 flex items-center justify-center p-2 overflow-y-auto">
+      <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4 my-auto">
+        
+        <!-- Player Profile -->
+        <div class="space-y-3">
+          <div class="flex flex-col items-center">
+            <div id="lobbyAvatarDisplay" class="w-16 h-16 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-3xl shadow-sm cursor-pointer hover:scale-105 transition" title="Chọn avatar">
+              🐰
+            </div>
+            <span class="text-[11px] text-slate-500 mt-1 font-medium">Chọn biểu tượng</span>
+          </div>
+
+          <!-- Avatar Grid -->
+          <div id="avatarPicker" class="grid grid-cols-6 gap-1.5">
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🐰</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🐱</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🐻</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🍓</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🌸</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🦄</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🐣</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🎀</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">👑</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🦊</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">🐼</button>
+            <button type="button" class="avatar-option text-xl p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition active:scale-90">💖</button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tên người chơi</label>
+            <input id="inputNickname" type="text" maxlength="15" value="Bé Út" placeholder="Nhập tên..." class="w-full text-center px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:border-blue-500 focus:bg-white transition text-sm" />
+          </div>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="space-y-3 pt-1">
+          <div class="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl">
+            <button id="tabCreateRoom" class="py-1.5 rounded-lg text-xs font-semibold text-slate-900 bg-white shadow-sm transition">Tạo phòng</button>
+            <button id="tabJoinRoom" class="py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 transition">Vào phòng</button>
+          </div>
+
+          <!-- Create Room Form -->
+          <div id="panelCreateRoom" class="space-y-3">
+            <!-- Game Mode: Rounds vs Battle Royale -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Chế độ chơi</label>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button type="button" id="btnModeRounds" class="btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border-2 border-blue-600 bg-blue-50 text-blue-700 transition" data-mode="rounds">
+                  Tính điểm
+                </button>
+                <button type="button" id="btnModeBR" class="btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 transition" data-mode="battle_royale">
+                  Battle Royale
+                </button>
+              </div>
+            </div>
+
+            <!-- Rounds Selection (shown for 'rounds' mode) -->
+            <div id="roundsSelectionGroup">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Số hiệp đấu</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" class="btn-round-opt py-1.5 rounded-xl text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700" data-rounds="3">3 hiệp</button>
+                <button type="button" class="btn-round-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-rounds="5">5 hiệp</button>
+                <button type="button" class="btn-round-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-rounds="10">10 hiệp</button>
+              </div>
+            </div>
+
+            <!-- Battle Royale Info (hidden by default) -->
+            <div id="brDescGroup" class="hidden p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 leading-snug">
+              1 hiệp sinh tồn duy nhất: Thời gian mỗi lượt co hẹp dần sau mỗi vòng, người sống sót cuối cùng là Quán quân!
+            </div>
+
+            <!-- Turn time limit selection -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Thời gian mỗi lượt</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" class="btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="10">10 giây</button>
+                <button type="button" class="btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700" data-time="15">15 giây</button>
+                <button type="button" class="btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="20">20 giây</button>
+              </div>
+            </div>
+
+            <button id="btnActionCreate" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98">
+              Tạo phòng
+            </button>
+          </div>
+
+          <!-- Join Room Form -->
+          <div id="panelJoinRoom" class="hidden space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Mã phòng</label>
+              <input id="inputRoomCode" type="text" maxlength="5" placeholder="Ví dụ: ABCDE" autocapitalize="characters" autocorrect="off" spellcheck="false" class="w-full text-center uppercase tracking-widest font-mono text-base px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition" />
+            </div>
+
+            <button id="btnActionJoin" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98">
+              Vào phòng
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 2: WAITING ROOM -->
+    <section id="viewWaitingRoom" class="hidden flex-1 flex flex-col items-center justify-center p-2 overflow-y-auto">
+      <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4 my-auto">
+        
+        <!-- Header Info -->
+        <div class="text-center space-y-2 border-b border-slate-100 pb-3">
+          <div class="inline-flex items-center space-x-2 bg-slate-100 px-3.5 py-1 rounded-full">
+            <span class="text-xs text-slate-500 font-medium">Mã phòng:</span>
+            <span id="waitingRoomCode" class="text-sm font-mono font-bold tracking-wider text-blue-600">ABCDE</span>
+          </div>
+          
+          <div class="flex items-center justify-center space-x-2 pt-1">
+            <button id="btnShareRoomNative" class="text-xs px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold inline-flex items-center space-x-1.5 transition active:scale-95">
+              <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+              <span>Chia sẻ link</span>
+            </button>
+            <button id="btnShowQrCode" class="text-xs px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold inline-flex items-center space-x-1 transition active:scale-95" title="Mã QR">
+              <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+              <span>Mã QR</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Players List -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
+            <span>Người chơi (<span id="playerCount">1</span>/8)</span>
+            <div class="flex items-center space-x-1">
+              <span id="roomDurationBadge" class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[11px]">15s</span>
+              <span id="roomRoundsBadge" class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[11px]">3 Hiệp</span>
+            </div>
+          </div>
+
+          <div id="waitingPlayersList" class="space-y-1.5 max-h-52 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="space-y-2 pt-1">
+          <div id="hostControls" class="space-y-2">
+            <button id="btnStartGame" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm flex items-center justify-center space-x-1.5 transition active:scale-98">
+              <span>Bắt đầu</span>
+            </button>
+            <button id="btnAddBot" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center space-x-1 transition active:scale-98">
+              <span>Thêm Bot</span>
+            </button>
+          </div>
+
+          <div id="clientControls" class="hidden">
+            <button id="btnToggleReady" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98">
+              Sẵn sàng
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 3: ACTIVE GAME BOARD -->
+    <section id="viewGame" class="hidden flex-1 flex flex-col overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm relative">
+      
+      <!-- Top Game Status Bar -->
+      <div class="bg-white border-b border-slate-200 p-2.5 space-y-2 z-10 flex-shrink-0">
+        <div class="flex items-center justify-between gap-2">
+          <!-- Current Word -->
+          <div class="min-w-0">
+            <div class="text-[11px] text-slate-500 font-medium flex items-center space-x-1.5">
+              <span>Từ hiện tại</span>
+              <span id="roundBadge" class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-semibold">Hiệp 1/3</span>
+            </div>
+            <div class="flex items-baseline space-x-1.5 truncate">
+              <span id="currentWordDisplay" class="text-base sm:text-lg font-bold text-slate-900 truncate">học sinh</span>
+              <span class="text-xs text-slate-400">➔</span>
+              <span id="expectedSyllableDisplay" class="text-base sm:text-lg font-bold text-blue-600 underline underline-offset-2">sinh</span>
+            </div>
+          </div>
+
+          <!-- Active Turn Info & Timer -->
+          <div class="flex items-center space-x-2 flex-shrink-0">
+            <div class="text-right hidden xs:block">
+              <div class="text-[10px] text-slate-400">Lượt</div>
+              <div id="activePlayerBadge" class="text-xs font-semibold text-slate-700 flex items-center space-x-1 justify-end max-w-[90px] truncate">
+                <span id="activePlayerAvatar">🐰</span>
+                <span id="activePlayerName" class="truncate">@Bé Út</span>
+              </div>
+            </div>
+
+            <!-- Timer Box -->
+            <div id="timerBox" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center transition-colors duration-300">
+              <span id="timerNumber" class="text-sm sm:text-base font-bold text-slate-800 font-mono">15</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+          <div id="timerProgressBar" class="h-full bg-blue-600 transition-all duration-300" style="width: 100%;"></div>
+        </div>
+
+        <!-- Players strip -->
+        <div id="gamePlayersStrip" class="flex items-center space-x-1.5 overflow-x-auto pb-0.5 scrollbar-none"></div>
+      </div>
+
+      <!-- Messenger Chat Feed -->
+      <div id="chatFeed" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 scroll-smooth"></div>
+
+      <!-- Typing Indicator -->
+      <div id="typingIndicator" class="hidden px-3 py-1 text-xs text-slate-500 italic bg-white border-t border-slate-100 flex items-center space-x-1.5">
+        <span id="typingAvatar">🤖</span>
+        <span id="typingText" class="truncate">Đang suy nghĩ...</span>
+      </div>
+
+      <!-- Messenger Input Bar (NO EXAMPLES) -->
+      <div class="p-2 sm:p-2.5 bg-white border-t border-slate-200 flex-shrink-0 mobile-safe-bottom">
+        <form id="formWordSubmit" class="flex items-center space-x-2" autocomplete="off">
+          <div class="flex-1 flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-full px-2.5 py-1 transition min-w-0">
+            <!-- Locked Prefix Pill -->
+            <div id="inputPrefixBadge" class="hidden items-center bg-blue-100 text-blue-700 font-bold px-2.5 py-0.5 rounded-full text-xs sm:text-sm flex-shrink-0 select-none mr-1">
+              <span id="inputPrefixText">sinh</span>
+            </div>
+            <!-- Clean input without examples -->
+            <input 
+              id="inputWord" 
+              type="text" 
+              placeholder="Nhập từ..." 
+              disabled 
+              enterkeyhint="send"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              class="flex-1 bg-transparent px-2 py-1 text-base text-slate-900 placeholder-slate-400 focus:outline-none font-medium min-w-0" 
+            />
+          </div>
+          <button 
+            id="btnSendWord" 
+            type="submit" 
+            disabled 
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 flex items-center justify-center text-white shadow-sm transition flex-shrink-0 active:scale-95"
+            title="Gửi"
+          >
+            <i data-lucide="send" class="w-4 h-4 ml-0.5"></i>
+          </button>
+        </form>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL: ROUND END ================= -->
+  <div id="modalRoundEnd" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 text-center shadow-lg space-y-4">
+      <div class="text-center space-y-1">
+        <h3 class="text-base font-bold text-slate-900" id="roundEndTitle">Kết thúc hiệp</h3>
+        <p class="text-xs text-slate-500" id="roundEndSubtitle">Điểm thưởng hiệp đấu đã được cộng</p>
+      </div>
+
+      <div class="bg-slate-50 rounded-xl p-3 space-y-2 border border-slate-200 max-h-48 overflow-y-auto" id="roundLeaderboardList"></div>
+
+      <div class="pt-1">
+        <button id="btnNextRound" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98">
+          Vào hiệp tiếp theo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: PODIUM / MATCH FINISHED ================= -->
+  <div id="modalPodium" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 text-center shadow-xl space-y-4">
+      
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">
+          Bảng xếp hạng chung cuộc
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5" id="podiumSubtitle">Chúc mừng các người chơi xuất sắc nhất!</p>
+      </div>
+
+      <!-- 3D OLYMPIC PODIUM -->
+      <div class="pt-2 pb-1 flex items-end justify-center space-x-2" id="podiumContainer">
+        <!-- Rank 2 -->
+        <div class="flex-1 flex flex-col items-center">
+          <div class="text-2xl" id="podium2Avatar">🐱</div>
+          <div class="text-xs font-semibold text-slate-700 truncate max-w-[80px]" id="podium2Name">@Bé Hai</div>
+          <div class="text-[11px] text-slate-500 font-bold" id="podium2Score">0 đ</div>
+          <div class="podium-2 w-full rounded-t-xl flex flex-col items-center justify-center shadow-sm border-t-2 border-slate-300 mt-1">
+            <span class="text-base">🥈</span>
+            <span class="text-[11px] font-bold text-white">Hạng 2</span>
+          </div>
+        </div>
+
+        <!-- Rank 1 (Tallest) -->
+        <div class="flex-1 flex flex-col items-center relative -top-2">
+          <div class="text-2xl" id="podium1Avatar">🐰</div>
+          <div class="text-xs font-bold text-slate-900 truncate max-w-[90px]" id="podium1Name">@Bé Út</div>
+          <div class="text-[11px] text-amber-600 font-bold" id="podium1Score">0 đ</div>
+          <div class="podium-1 w-full rounded-t-xl flex flex-col items-center justify-center shadow-sm border-t-2 border-amber-300 mt-1">
+            <span class="text-lg">🥇</span>
+            <span class="text-[11px] font-bold text-white">Quán quân</span>
+          </div>
+        </div>
+
+        <!-- Rank 3 -->
+        <div class="flex-1 flex flex-col items-center">
+          <div class="text-2xl" id="podium3Avatar">🐻</div>
+          <div class="text-xs font-semibold text-slate-700 truncate max-w-[80px]" id="podium3Name">@Bé Ba</div>
+          <div class="text-[11px] text-slate-500 font-bold" id="podium3Score">0 đ</div>
+          <div class="podium-3 w-full rounded-t-xl flex flex-col items-center justify-center shadow-sm border-t-2 border-orange-400 mt-1">
+            <span class="text-base">🥉</span>
+            <span class="text-[11px] font-bold text-white">Hạng 3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Ranks List -->
+      <div id="podiumOtherList" class="space-y-1 text-xs text-left max-h-28 overflow-y-auto pr-1"></div>
+
+      <div class="pt-1 space-y-1.5">
+        <button id="btnPlayAgainMatch" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98">
+          Chơi ván mới
+        </button>
+        <button id="btnClosePodium" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition active:scale-98">
+          Đóng
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: QR CODE ================= -->
+  <div id="modalQrCode" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white border border-slate-200 rounded-2xl p-5 text-center shadow-lg space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="text-sm font-semibold text-slate-800">Quét mã vào phòng</h3>
+        <button id="btnCloseQrCode" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-2 border border-slate-200 rounded-xl mx-auto inline-block">
+        <img id="qrCodeImg" src="" alt="Mã QR phòng" class="w-40 h-40 mx-auto block" />
+      </div>
+
+      <p class="text-xs text-slate-500">
+        Dùng camera điện thoại hoặc Zalo để quét mã và tham gia ngay.
+      </p>
+
+      <button id="btnCopyMobileLink" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition active:scale-98">
+        Sao chép liên kết
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: RULES ================= -->
+  <div id="modalRules" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5 shadow-lg space-y-3.5 max-h-[90dvh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-shrink-0">
+        <h3 class="text-sm sm:text-base font-bold text-slate-900">Luật chơi & Nhóm từ bị cấm</h3>
+        <button id="btnCloseRules" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2.5 text-xs text-slate-600 leading-relaxed overflow-y-auto pr-1 flex-1">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+          <span class="font-bold text-slate-800">1. Quy tắc nối từ 2 âm tiết:</span>
+          <p>Mỗi từ đưa ra phải có đúng 2 tiếng nằm trong từ điển tiếng Việt (~52.800 từ). Tiếng đầu của người sau phải trùng với tiếng cuối của người trước.</p>
+        </div>
+
+        <div class="p-3 bg-rose-50 rounded-xl border border-rose-200 space-y-1.5 text-rose-900">
+          <span class="font-bold text-rose-800">2. Các nhóm từ bị CẤM:</span>
+          <ul class="list-disc list-inside space-y-1 pl-1 text-rose-800">
+            <li><strong>Từ cảm thán</strong>: Các từ bộc lộ cảm xúc (như <em>ôi, ái, chao ôi, trời ơi, hỡi ôi...</em>) không được chấp nhận nhằm tránh tạo cụm từ lặp lại vô nghĩa.</li>
+            <li><strong>Từ vô nghĩa</strong>: Từ tự chế hoặc ghép đại hai từ đơn không liên quan.</li>
+            <li><strong>Từ lặp lại</strong>: Không được lặp lại từ đã xuất hiện trước đó trong cùng một ván.</li>
+            <li><strong>Từ tục tĩu, nhạy cảm</strong>: Hệ thống có bộ lọc tự động cấm các từ ngữ vi phạm thuần phong mỹ tục.</li>
+          </ul>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+          <span class="font-bold text-slate-800">3. Chế độ chơi:</span>
+          <ul class="list-disc list-inside space-y-1 pl-1 text-slate-600">
+            <li><strong>Tính điểm (3, 5, 10 hiệp)</strong>: Tích lũy điểm (+10đ mỗi từ nối, +50đ thắng hiệp), tổng kết bục Podium vinh danh Top 1, Top 2, Top 3.</li>
+            <li><strong>Battle Royale</strong>: 1 hiệp sinh tồn duy nhất, thời gian mỗi lượt co hẹp dần theo từng vòng, người sống sót cuối cùng là Quán quân!</li>
+          </ul>
+        </div>
+      </div>
+
+      <button id="btnAcknowledgeRules" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition active:scale-98 flex-shrink-0">
+        Đã hiểu
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed top-16 right-3 left-3 sm:left-auto sm:right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/sound.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

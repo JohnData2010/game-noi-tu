@@ -1,0 +1,918 @@
+// Game Nối Từ - Client Application Logic (Clean Light Theme, Popular App Style)
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize Lucide Icons
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+
+  const socket = io({
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000
+  });
+
+  // App State
+  let myId = null;
+  let mySessionToken = sessionStorage.getItem('noitu_session_token') || null;
+  let currentRoom = null;
+  let selectedAvatar = localStorage.getItem('noitu_avatar') || '🐰';
+  let turnDuration = 15;
+  let selectedRounds = 3;
+  let selectedGameMode = 'rounds'; // 'rounds' | 'battle_royale'
+  let isSoundEnabled = true;
+  let serverLocalIp = window.location.hostname;
+  let serverPort = window.location.port || '3000';
+
+  // DOM Elements
+  const viewLobby = document.getElementById('viewLobby');
+  const viewWaitingRoom = document.getElementById('viewWaitingRoom');
+  const viewGame = document.getElementById('viewGame');
+
+  const navRoomBadge = document.getElementById('navRoomBadge');
+  const navRoomCode = document.getElementById('navRoomCode');
+  const btnLeaveRoom = document.getElementById('btnLeaveRoom');
+  const btnSoundToggle = document.getElementById('btnSoundToggle');
+  const iconSound = document.getElementById('iconSound');
+  const dictStats = document.getElementById('dictStats');
+
+  // Lobby Elements
+  const lobbyAvatarDisplay = document.getElementById('lobbyAvatarDisplay');
+  const avatarPicker = document.getElementById('avatarPicker');
+  const inputNickname = document.getElementById('inputNickname');
+  const tabCreateRoom = document.getElementById('tabCreateRoom');
+  const tabJoinRoom = document.getElementById('tabJoinRoom');
+  const panelCreateRoom = document.getElementById('panelCreateRoom');
+  const panelJoinRoom = document.getElementById('panelJoinRoom');
+  const btnActionCreate = document.getElementById('btnActionCreate');
+  const btnActionJoin = document.getElementById('btnActionJoin');
+  const inputRoomCode = document.getElementById('inputRoomCode');
+
+  // Mode Elements
+  const btnModeRounds = document.getElementById('btnModeRounds');
+  const btnModeBR = document.getElementById('btnModeBR');
+  const roundsSelectionGroup = document.getElementById('roundsSelectionGroup');
+  const brDescGroup = document.getElementById('brDescGroup');
+
+  // Waiting Room Elements
+  const waitingRoomCode = document.getElementById('waitingRoomCode');
+  const btnShareRoomNative = document.getElementById('btnShareRoomNative');
+  const btnShowQrCode = document.getElementById('btnShowQrCode');
+  const playerCount = document.getElementById('playerCount');
+  const roomDurationBadge = document.getElementById('roomDurationBadge');
+  const roomRoundsBadge = document.getElementById('roomRoundsBadge');
+  const waitingPlayersList = document.getElementById('waitingPlayersList');
+  const hostControls = document.getElementById('hostControls');
+  const clientControls = document.getElementById('clientControls');
+  const btnStartGame = document.getElementById('btnStartGame');
+  const btnAddBot = document.getElementById('btnAddBot');
+  const btnToggleReady = document.getElementById('btnToggleReady');
+
+  // Game Board Elements
+  const currentWordDisplay = document.getElementById('currentWordDisplay');
+  const expectedSyllableDisplay = document.getElementById('expectedSyllableDisplay');
+  const roundBadge = document.getElementById('roundBadge');
+  const activePlayerAvatar = document.getElementById('activePlayerAvatar');
+  const activePlayerName = document.getElementById('activePlayerName');
+  const timerBox = document.getElementById('timerBox');
+  const timerNumber = document.getElementById('timerNumber');
+  const timerProgressBar = document.getElementById('timerProgressBar');
+  const gamePlayersStrip = document.getElementById('gamePlayersStrip');
+  const chatFeed = document.getElementById('chatFeed');
+  const typingIndicator = document.getElementById('typingIndicator');
+  const typingAvatar = document.getElementById('typingAvatar');
+  const typingText = document.getElementById('typingText');
+  const inputPrefixBadge = document.getElementById('inputPrefixBadge');
+  const inputPrefixText = document.getElementById('inputPrefixText');
+  const formWordSubmit = document.getElementById('formWordSubmit');
+  const inputWord = document.getElementById('inputWord');
+  const btnSendWord = document.getElementById('btnSendWord');
+
+  // Modals
+  const modalQrCode = document.getElementById('modalQrCode');
+  const qrCodeImg = document.getElementById('qrCodeImg');
+  const btnCloseQrCode = document.getElementById('btnCloseQrCode');
+  const btnCopyMobileLink = document.getElementById('btnCopyMobileLink');
+
+  // Round End Modal
+  const modalRoundEnd = document.getElementById('modalRoundEnd');
+  const roundEndTitle = document.getElementById('roundEndTitle');
+  const roundEndSubtitle = document.getElementById('roundEndSubtitle');
+  const roundLeaderboardList = document.getElementById('roundLeaderboardList');
+  const btnNextRound = document.getElementById('btnNextRound');
+
+  // Podium Modal (Top 1, Top 2, Top 3)
+  const modalPodium = document.getElementById('modalPodium');
+  const podiumSubtitle = document.getElementById('podiumSubtitle');
+  const podium1Avatar = document.getElementById('podium1Avatar');
+  const podium1Name = document.getElementById('podium1Name');
+  const podium1Score = document.getElementById('podium1Score');
+  const podium2Avatar = document.getElementById('podium2Avatar');
+  const podium2Name = document.getElementById('podium2Name');
+  const podium2Score = document.getElementById('podium2Score');
+  const podium3Avatar = document.getElementById('podium3Avatar');
+  const podium3Name = document.getElementById('podium3Name');
+  const podium3Score = document.getElementById('podium3Score');
+  const podiumOtherList = document.getElementById('podiumOtherList');
+  const btnPlayAgainMatch = document.getElementById('btnPlayAgainMatch');
+  const btnClosePodium = document.getElementById('btnClosePodium');
+
+  const modalRules = document.getElementById('modalRules');
+  const btnOpenRules = document.getElementById('btnOpenRules');
+  const btnCloseRules = document.getElementById('btnCloseRules');
+  const btnAcknowledgeRules = document.getElementById('btnAcknowledgeRules');
+  const toastContainer = document.getElementById('toastContainer');
+
+  // Setup saved avatar
+  lobbyAvatarDisplay.textContent = selectedAvatar;
+  const savedName = localStorage.getItem('noitu_nickname');
+  if (savedName) inputNickname.value = savedName;
+
+  // ================= MOBILE VIEWPORT HANDLING =================
+  function updateViewportHeight() {
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--vvh', `${vh}px`);
+    if (chatFeed) {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    }
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateViewportHeight);
+    window.visualViewport.addEventListener('scroll', updateViewportHeight);
+  }
+  window.addEventListener('resize', updateViewportHeight);
+  window.addEventListener('orientationchange', () => setTimeout(updateViewportHeight, 200));
+  updateViewportHeight();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      updateViewportHeight();
+      if (!socket.connected) {
+        socket.connect();
+      }
+    }
+  });
+
+  // ================= VIEW SWITCHER =================
+  function showView(view) {
+    viewLobby.classList.add('hidden');
+    viewWaitingRoom.classList.add('hidden');
+    viewGame.classList.add('hidden');
+
+    if (view === 'lobby') {
+      viewLobby.classList.remove('hidden');
+      navRoomBadge.classList.add('hidden');
+      btnLeaveRoom.classList.add('hidden');
+    } else if (view === 'waiting') {
+      viewWaitingRoom.classList.remove('hidden');
+      navRoomBadge.classList.remove('hidden');
+      btnLeaveRoom.classList.remove('hidden');
+    } else if (view === 'game') {
+      viewGame.classList.remove('hidden');
+      navRoomBadge.classList.remove('hidden');
+      btnLeaveRoom.classList.remove('hidden');
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  // ================= TOAST NOTIFICATION =================
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    const colors = {
+      info: 'bg-slate-800 text-white border-slate-700',
+      success: 'bg-emerald-600 text-white border-emerald-500',
+      error: 'bg-red-600 text-white border-red-500',
+      warning: 'bg-amber-600 text-white border-amber-500'
+    };
+
+    toast.className = `px-3.5 py-2 rounded-xl border shadow-md text-xs font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center justify-between space-x-2 ${colors[type] || colors.info}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    toastContainer.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.classList.remove('translate-y-2', 'opacity-0');
+    });
+
+    setTimeout(() => {
+      toast.classList.add('opacity-0', '-translate-y-2');
+      setTimeout(() => toast.remove(), 300);
+    }, 3200);
+  }
+
+  // Fetch dictionary size and local IP info
+  fetch('/api/stats')
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.dictionarySize) {
+        dictStats.textContent = `${data.dictionarySize.toLocaleString('vi-VN')} từ`;
+      }
+      if (data && data.localIp) {
+        serverLocalIp = data.localIp;
+      }
+      if (data && data.port) {
+        serverPort = data.port;
+      }
+    })
+    .catch(() => {});
+
+  // ================= SOUND TOGGLE =================
+  btnSoundToggle.addEventListener('click', () => {
+    isSoundEnabled = window.soundManager.toggle();
+    if (isSoundEnabled) {
+      iconSound.setAttribute('data-lucide', 'volume-2');
+      showToast('Đã bật âm thanh', 'info');
+    } else {
+      iconSound.setAttribute('data-lucide', 'volume-x');
+      showToast('Đã tắt âm thanh', 'info');
+    }
+    if (window.lucide) window.lucide.createIcons();
+  });
+
+  // ================= AVATAR PICKER =================
+  avatarPicker.addEventListener('click', (e) => {
+    const btn = e.target.closest('.avatar-option');
+    if (btn) {
+      selectedAvatar = btn.textContent.trim();
+      lobbyAvatarDisplay.textContent = selectedAvatar;
+      localStorage.setItem('noitu_avatar', selectedAvatar);
+      window.soundManager.playPop();
+    }
+  });
+
+  // Game Mode Selection
+  if (btnModeRounds && btnModeBR) {
+    btnModeRounds.addEventListener('click', () => {
+      selectedGameMode = 'rounds';
+      btnModeRounds.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border-2 border-blue-600 bg-blue-50 text-blue-700 transition';
+      btnModeBR.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 transition';
+      roundsSelectionGroup.classList.remove('hidden');
+      brDescGroup.classList.add('hidden');
+      window.soundManager.playPop();
+    });
+
+    btnModeBR.addEventListener('click', () => {
+      selectedGameMode = 'battle_royale';
+      btnModeBR.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border-2 border-blue-600 bg-blue-50 text-blue-700 transition';
+      btnModeRounds.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 transition';
+      roundsSelectionGroup.classList.add('hidden');
+      brDescGroup.classList.remove('hidden');
+      window.soundManager.playPop();
+    });
+  }
+
+  // Round options toggle
+  document.querySelectorAll('.btn-round-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-round-opt').forEach(b => {
+        b.className = 'btn-round-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300';
+      });
+      btn.className = 'btn-round-opt py-1.5 rounded-xl text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700';
+      selectedRounds = parseInt(btn.dataset.rounds, 10);
+      window.soundManager.playPop();
+    });
+  });
+
+  // Time options toggle
+  document.querySelectorAll('.btn-time-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-time-opt').forEach(b => {
+        b.className = 'btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300';
+      });
+      btn.className = 'btn-time-opt py-1.5 rounded-xl text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700';
+      turnDuration = parseInt(btn.dataset.time, 10);
+      window.soundManager.playPop();
+    });
+  });
+
+  // Tab switching
+  tabCreateRoom.addEventListener('click', () => {
+    tabCreateRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-900 bg-white shadow-sm transition';
+    tabJoinRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
+    panelCreateRoom.classList.remove('hidden');
+    panelJoinRoom.classList.add('hidden');
+  });
+
+  tabJoinRoom.addEventListener('click', () => {
+    tabJoinRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-900 bg-white shadow-sm transition';
+    tabCreateRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
+    panelJoinRoom.classList.remove('hidden');
+    panelCreateRoom.classList.add('hidden');
+    setTimeout(() => inputRoomCode.focus(), 100);
+  });
+
+  // Auto-detect URL parameter `?room=CODE`
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomParam = urlParams.get('room');
+  if (roomParam) {
+    tabJoinRoom.click();
+    inputRoomCode.value = roomParam.toUpperCase().trim();
+  }
+
+  // ================= CREATE & JOIN ACTIONS =================
+  btnActionCreate.addEventListener('click', () => {
+    const nickname = inputNickname.value.trim() || 'Người chơi';
+    localStorage.setItem('noitu_nickname', nickname);
+    window.soundManager.playPop();
+    socket.emit('create_room', {
+      nickname,
+      avatar: selectedAvatar,
+      turnDuration,
+      maxRounds: selectedRounds,
+      gameMode: selectedGameMode,
+      sessionToken: mySessionToken
+    });
+  });
+
+  btnActionJoin.addEventListener('click', () => {
+    const nickname = inputNickname.value.trim() || 'Người chơi';
+    localStorage.setItem('noitu_nickname', nickname);
+    const code = inputRoomCode.value.trim().toUpperCase();
+    if (!code) {
+      showToast('Vui lòng nhập mã phòng!', 'warning');
+      inputRoomCode.focus();
+      return;
+    }
+    window.soundManager.playPop();
+    socket.emit('join_room', {
+      roomId: code,
+      nickname,
+      avatar: selectedAvatar,
+      sessionToken: mySessionToken
+    });
+  });
+
+  // ================= MOBILE SHARING & QR CODE =================
+  function getMobileRoomLink() {
+    if (!currentRoom) return window.location.href;
+    const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? `${serverLocalIp}:${serverPort}`
+      : window.location.host;
+    return `${window.location.protocol}//${host}/?room=${currentRoom.id}`;
+  }
+
+  async function shareRoomNative() {
+    if (!currentRoom) return;
+    const shareUrl = getMobileRoomLink();
+    const shareData = {
+      title: 'Game Nối Từ Ba Chị Em',
+      text: `Vào chơi Nối Từ cùng mình nhé! Mã phòng: ${currentRoom.id}`,
+      url: shareUrl
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        window.soundManager.playPop();
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          copyToClipboard(shareUrl, 'Đã sao chép liên kết vào bộ nhớ tạm!');
+        }
+      }
+    } else {
+      copyToClipboard(shareUrl, 'Đã sao chép liên kết phòng!');
+    }
+  }
+
+  btnShareRoomNative.addEventListener('click', shareRoomNative);
+  navRoomBadge.addEventListener('click', shareRoomNative);
+
+  btnShowQrCode.addEventListener('click', () => {
+    if (!currentRoom) return;
+    const shareUrl = getMobileRoomLink();
+    qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(shareUrl)}`;
+    modalQrCode.classList.remove('hidden');
+    window.soundManager.playPop();
+  });
+
+  btnCloseQrCode.addEventListener('click', () => modalQrCode.classList.add('hidden'));
+
+  btnCopyMobileLink.addEventListener('click', () => {
+    const shareUrl = getMobileRoomLink();
+    copyToClipboard(shareUrl, 'Đã sao chép liên kết vào bộ nhớ tạm!');
+  });
+
+  function copyToClipboard(text, msg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(msg, 'success');
+        window.soundManager.playPop();
+      }).catch(() => {
+        prompt('Sao chép liên kết phòng:', text);
+      });
+    } else {
+      prompt('Sao chép liên kết phòng:', text);
+    }
+  }
+
+  btnStartGame.addEventListener('click', () => {
+    window.soundManager.playPop();
+    socket.emit('start_game');
+  });
+
+  btnAddBot.addEventListener('click', () => {
+    window.soundManager.playPop();
+    socket.emit('add_bot');
+  });
+
+  btnToggleReady.addEventListener('click', () => {
+    window.soundManager.playPop();
+    socket.emit('toggle_ready');
+  });
+
+  btnLeaveRoom.addEventListener('click', () => {
+    if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
+      sessionStorage.removeItem('noitu_session_token');
+      sessionStorage.removeItem('noitu_room_id');
+      window.location.href = '/';
+    }
+  });
+
+  // ================= GAMEPLAY ACTIONS =================
+  formWordSubmit.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const rawInput = inputWord.value.trim().toLowerCase();
+    if (!rawInput) return;
+
+    const prefix = (currentRoom?.expectedSyllable || '').trim().toLowerCase();
+    let fullWord = '';
+
+    if (prefix) {
+      if (rawInput.startsWith(prefix + ' ')) {
+        fullWord = rawInput;
+      } else if (rawInput === prefix) {
+        showToast('Vui lòng nhập thêm tiếng thứ 2!', 'warning');
+        return;
+      } else {
+        fullWord = `${prefix} ${rawInput}`;
+      }
+    } else {
+      fullWord = rawInput;
+    }
+
+    window.soundManager.playPop();
+    socket.emit('submit_word', fullWord);
+    inputWord.value = '';
+
+    setTimeout(() => {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    }, 50);
+  });
+
+  // ================= MODAL ACTIONS =================
+  btnOpenRules.addEventListener('click', () => modalRules.classList.remove('hidden'));
+  btnCloseRules.addEventListener('click', () => modalRules.classList.add('hidden'));
+  btnAcknowledgeRules.addEventListener('click', () => modalRules.classList.add('hidden'));
+
+  btnNextRound.addEventListener('click', () => {
+    modalRoundEnd.classList.add('hidden');
+    window.soundManager.playPop();
+    socket.emit('start_game');
+  });
+
+  btnPlayAgainMatch.addEventListener('click', () => {
+    modalPodium.classList.add('hidden');
+    window.soundManager.playPop();
+    socket.emit('start_game');
+  });
+
+  btnClosePodium.addEventListener('click', () => {
+    modalPodium.classList.add('hidden');
+  });
+
+  // ================= SOCKET EVENT LISTENERS =================
+  socket.on('connect', () => {
+    myId = socket.id;
+
+    const savedRoomId = sessionStorage.getItem('noitu_room_id');
+    const savedToken = sessionStorage.getItem('noitu_session_token');
+    if (savedRoomId && savedToken && !currentRoom) {
+      socket.emit('join_room', {
+        roomId: savedRoomId,
+        sessionToken: savedToken,
+        nickname: localStorage.getItem('noitu_nickname') || 'Người chơi'
+      });
+    }
+  });
+
+  socket.on('session_created', ({ sessionToken, roomId }) => {
+    mySessionToken = sessionToken;
+    sessionStorage.setItem('noitu_session_token', sessionToken);
+    sessionStorage.setItem('noitu_room_id', roomId);
+  });
+
+  socket.on('error_message', (msg) => {
+    showToast(msg, 'error');
+    window.soundManager.playBuzzer();
+  });
+
+  socket.on('room_updated', (room) => {
+    currentRoom = room;
+    navRoomCode.textContent = room.id;
+    waitingRoomCode.textContent = room.id;
+    roomDurationBadge.textContent = `${room.turnDuration}s`;
+    
+    if (roomRoundsBadge) {
+      roomRoundsBadge.textContent = room.gameMode === 'battle_royale' ? 'Battle Royale' : `${room.maxRounds} Hiệp`;
+    }
+    playerCount.textContent = room.players.length;
+
+    const me = room.players.find(p => p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken));
+    const amIHost = me ? me.isHost : false;
+
+    // View Switching
+    if (room.status === 'waiting') {
+      showView('waiting');
+      renderWaitingPlayers(room.players, amIHost);
+
+      if (amIHost) {
+        hostControls.classList.remove('hidden');
+        clientControls.classList.add('hidden');
+        btnStartGame.disabled = room.players.length < 2;
+        btnStartGame.classList.toggle('opacity-50', room.players.length < 2);
+      } else {
+        hostControls.classList.add('hidden');
+        clientControls.classList.remove('hidden');
+        btnToggleReady.textContent = me?.isReady ? 'Hủy sẵn sàng' : 'Sẵn sàng';
+        btnToggleReady.className = me?.isReady 
+          ? 'w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm shadow-sm transition active:scale-98'
+          : 'w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98';
+      }
+    } else if (room.status === 'playing' || room.status === 'round_ended' || room.status === 'match_ended') {
+      showView('game');
+      if (room.status === 'playing') {
+        modalRoundEnd.classList.add('hidden');
+        modalPodium.classList.add('hidden');
+      }
+      renderGameBoard(room, me);
+    }
+  });
+
+  function renderWaitingPlayers(players, amIHost) {
+    waitingPlayersList.innerHTML = '';
+    players.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 transition';
+      
+      const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
+      item.innerHTML = `
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <span class="text-xl flex-shrink-0">${p.avatar}</span>
+          <div class="min-w-0">
+            <div class="text-xs sm:text-sm font-semibold text-slate-900 flex items-center space-x-1.5 truncate">
+              <span class="truncate">${p.nickname}</span>
+              ${isMe ? '<span class="text-[9px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-medium flex-shrink-0">BẠN</span>' : ''}
+              ${p.isHost ? '<span class="text-[9px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-medium flex-shrink-0">Chủ phòng</span>' : ''}
+              ${p.isBot ? '<span class="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.5 rounded font-medium flex-shrink-0">Bot</span>' : ''}
+              ${p.isDisconnected ? '<span class="text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded flex-shrink-0">Mất mạng</span>' : ''}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          ${p.isHost 
+            ? '<span class="text-[11px] font-semibold text-emerald-600">Sẵn sàng</span>' 
+            : p.isReady 
+              ? '<span class="text-[11px] font-semibold text-emerald-600">Sẵn sàng</span>' 
+              : '<span class="text-[11px] font-medium text-slate-400">Đang chờ</span>'}
+          ${amIHost && p.isBot ? `<button onclick="window.removeBot('${p.id}')" class="text-slate-400 hover:text-red-500 p-1" title="Xóa Bot"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+        </div>
+      `;
+      waitingPlayersList.appendChild(item);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  window.removeBot = function(botId) {
+    socket.emit('remove_bot', botId);
+  };
+
+  function renderGameBoard(room, me) {
+    currentWordDisplay.textContent = room.lastWord || '---';
+    expectedSyllableDisplay.textContent = room.expectedSyllable || '---';
+    
+    if (roundBadge) {
+      roundBadge.textContent = room.gameMode === 'battle_royale' 
+        ? 'Sinh tồn' 
+        : `Hiệp ${room.roundNumber || 1}/${room.maxRounds || 3}`;
+    }
+
+    // Show locked prefix in input bar
+    if (room.expectedSyllable) {
+      inputPrefixBadge.classList.remove('hidden');
+      inputPrefixBadge.classList.add('flex');
+      inputPrefixText.textContent = room.expectedSyllable;
+    } else {
+      inputPrefixBadge.classList.add('hidden');
+      inputPrefixBadge.classList.remove('flex');
+    }
+
+    const activePlayer = room.players[room.turnIndex];
+    if (activePlayer) {
+      activePlayerAvatar.textContent = activePlayer.avatar;
+      activePlayerName.textContent = `@${activePlayer.nickname}`;
+    }
+
+    // Mini status strip
+    gamePlayersStrip.innerHTML = '';
+    room.players.forEach(p => {
+      const badge = document.createElement('div');
+      const isTurn = activePlayer && p.id === activePlayer.id;
+      const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
+      badge.className = `flex-shrink-0 flex items-center space-x-1 px-2 py-0.5 rounded-lg border text-[11px] font-medium transition ${
+        isTurn 
+          ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' 
+          : p.isAlive 
+            ? 'bg-slate-50 border-slate-200 text-slate-700' 
+            : 'bg-red-50 border-red-200 text-red-500 opacity-60'
+      }`;
+      badge.innerHTML = `
+        <span>${p.avatar}</span>
+        <span class="max-w-[70px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
+        ${p.isAlive ? '<span class="text-emerald-500 text-[8px]">●</span>' : '<span class="text-red-500 text-[8px]">×</span>'}
+        <span class="text-[10px] text-slate-400 font-mono">(${p.score})</span>
+      `;
+      gamePlayersStrip.appendChild(badge);
+    });
+
+    // Control input box availability (CLEAN, NO EXAMPLES)
+    const isMyTurn = activePlayer && (activePlayer.id === myId || (activePlayer.sessionToken && activePlayer.sessionToken === mySessionToken)) && me && me.isAlive;
+    if (isMyTurn) {
+      inputWord.disabled = false;
+      btnSendWord.disabled = false;
+      inputWord.placeholder = 'Nhập từ...';
+      if (document.activeElement !== inputWord) {
+        inputWord.focus();
+      }
+      typingIndicator.classList.add('hidden');
+    } else {
+      inputWord.disabled = true;
+      btnSendWord.disabled = true;
+      if (me && !me.isAlive) {
+        inputWord.placeholder = 'Bạn đã bị loại';
+      } else if (activePlayer) {
+        inputWord.placeholder = `Chờ lượt ${activePlayer.nickname}...`;
+      }
+
+      if (activePlayer && room.status === 'playing') {
+        typingAvatar.textContent = activePlayer.avatar;
+        typingText.textContent = `${activePlayer.nickname} đang suy nghĩ...`;
+        typingIndicator.classList.remove('hidden');
+      } else {
+        typingIndicator.classList.add('hidden');
+      }
+    }
+  }
+
+  // Timer Tick Event
+  socket.on('timer_tick', ({ timeRemaining, totalDuration }) => {
+    timerNumber.textContent = timeRemaining;
+    const pct = Math.max(0, Math.min(100, (timeRemaining / totalDuration) * 100));
+    timerProgressBar.style.width = `${pct}%`;
+
+    if (timeRemaining <= 4) {
+      timerBox.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-50 border-2 border-red-500 flex items-center justify-center timer-critical transition-colors duration-300';
+      timerNumber.className = 'text-sm sm:text-base font-bold text-red-600 font-mono';
+      timerProgressBar.className = 'h-full bg-red-500 transition-all duration-300';
+      window.soundManager.playTick();
+    } else if (timeRemaining <= 7) {
+      timerBox.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 border-2 border-amber-500 flex items-center justify-center transition-colors duration-300';
+      timerNumber.className = 'text-sm sm:text-base font-bold text-amber-600 font-mono';
+      timerProgressBar.className = 'h-full bg-amber-500 transition-all duration-300';
+    } else {
+      timerBox.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+      timerNumber.className = 'text-sm sm:text-base font-bold text-slate-800 font-mono';
+      timerProgressBar.className = 'h-full bg-blue-600 transition-all duration-300';
+    }
+  });
+
+  // Turn Announcement Pill (Clean, Sleek, No Emojis Spam)
+  socket.on('turn_announcement', ({ nickname, avatar, syllable, startWord, isOpening }) => {
+    const pill = document.createElement('div');
+    pill.className = 'flex items-center justify-center my-1.5';
+    if (isOpening) {
+      pill.innerHTML = `
+        <span class="px-3 py-0.5 rounded-full bg-white border border-slate-200 text-[11px] text-slate-600 shadow-xs">
+          Mở màn: <strong class="text-slate-900">${startWord}</strong> &bull; Lượt của <strong class="text-blue-600">@${nickname}</strong>
+        </span>
+      `;
+    } else {
+      pill.innerHTML = `
+        <span class="px-3 py-0.5 rounded-full bg-white border border-slate-200 text-[11px] text-slate-600 shadow-xs">
+          Lượt của <strong class="text-blue-600">@${nickname}</strong> &bull; Nối: <strong class="text-slate-900">${syllable}</strong>
+        </span>
+      `;
+    }
+    chatFeed.appendChild(pill);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  });
+
+  // Player Message (Word Submitted)
+  socket.on('player_message', ({ playerId, nickname, avatar, word, timestamp }) => {
+    const isMe = playerId === myId;
+    if (isMe) {
+      window.soundManager.playPop();
+    } else {
+      window.soundManager.playMessageReceived();
+    }
+
+    const bubbleWrapper = document.createElement('div');
+    bubbleWrapper.className = `flex items-end space-x-1.5 ${isMe ? 'justify-end' : 'justify-start'}`;
+
+    if (isMe) {
+      bubbleWrapper.innerHTML = `
+        <div class="flex flex-col items-end max-w-[85%]">
+          <div class="chat-bubble-me px-3.5 py-1.5 rounded-2xl shadow-xs text-sm font-medium break-words">
+            ${word}
+          </div>
+          <span class="text-[9px] text-slate-400 mt-0.5 mr-1">${timestamp}</span>
+        </div>
+      `;
+    } else {
+      bubbleWrapper.innerHTML = `
+        <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs flex-shrink-0">
+          ${avatar}
+        </div>
+        <div class="flex flex-col items-start max-w-[85%]">
+          <span class="text-[10px] text-slate-500 ml-1 mb-0.5">${nickname}</span>
+          <div class="chat-bubble-other px-3.5 py-1.5 rounded-2xl text-sm font-medium break-words">
+            ${word}
+          </div>
+          <span class="text-[9px] text-slate-400 mt-0.5 ml-1">${timestamp}</span>
+        </div>
+      `;
+    }
+
+    chatFeed.appendChild(bubbleWrapper);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  });
+
+  // Player Eliminated Alert
+  socket.on('player_eliminated', ({ playerId, nickname, avatar, reason }) => {
+    window.soundManager.playBuzzer();
+
+    const card = document.createElement('div');
+    card.className = 'flex items-center justify-center my-1.5';
+    card.innerHTML = `
+      <span class="px-3 py-0.5 rounded-full bg-red-50 border border-red-200 text-[11px] text-red-700 shadow-xs">
+        <strong>@${nickname}</strong> bị loại: ${reason}
+      </span>
+    `;
+
+    chatFeed.appendChild(card);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  });
+
+  // Referee Note
+  socket.on('referee_message', ({ text }) => {
+    const card = document.createElement('div');
+    card.className = 'flex items-center justify-center my-1.5';
+    card.innerHTML = `
+      <span class="px-3 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-medium text-amber-800 shadow-xs">
+        ${text}
+      </span>
+    `;
+    chatFeed.appendChild(card);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  });
+
+  // ================= ROUND ENDED =================
+  socket.on('round_ended', ({ roundWinner, currentRound, maxRounds, leaderboard }) => {
+    window.soundManager.playStart();
+    roundEndTitle.textContent = `Kết thúc hiệp ${currentRound}/${maxRounds}`;
+
+    if (roundWinner) {
+      roundEndSubtitle.innerHTML = `<strong>@${roundWinner.nickname}</strong> thắng hiệp (+50 điểm)`;
+    } else {
+      roundEndSubtitle.textContent = 'Hết hiệp đấu!';
+    }
+
+    // Leaderboard
+    roundLeaderboardList.innerHTML = '';
+    (leaderboard || []).forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 shadow-xs';
+      row.innerHTML = `
+        <div class="flex items-center space-x-2 min-w-0">
+          <span class="w-5 font-bold text-center text-xs text-slate-400">#${item.rank}</span>
+          <span class="text-base flex-shrink-0">${item.avatar}</span>
+          <span class="text-xs font-semibold text-slate-800 truncate max-w-[130px]">${item.nickname}</span>
+        </div>
+        <span class="text-xs font-bold text-blue-600 font-mono">${item.score} đ</span>
+      `;
+      roundLeaderboardList.appendChild(row);
+    });
+
+    const me = currentRoom ? currentRoom.players.find(p => p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken)) : null;
+    const amIHost = me ? me.isHost : false;
+
+    if (amIHost) {
+      btnNextRound.disabled = false;
+      btnNextRound.classList.remove('opacity-50', 'cursor-not-allowed');
+      btnNextRound.textContent = `Vào hiệp ${currentRound + 1}`;
+    } else {
+      btnNextRound.disabled = true;
+      btnNextRound.classList.add('opacity-50', 'cursor-not-allowed');
+      btnNextRound.textContent = `Chờ chủ phòng vào hiệp ${currentRound + 1}...`;
+    }
+
+    modalRoundEnd.classList.remove('hidden');
+  });
+
+  // ================= MATCH FINISHED / PODIUM =================
+  socket.on('match_finished', ({ podium, totalRounds }) => {
+    modalRoundEnd.classList.add('hidden');
+    window.soundManager.playVictory();
+    spawnConfetti();
+
+    if (currentRoom?.gameMode === 'battle_royale') {
+      podiumSubtitle.textContent = 'Trận chiến sinh tồn Battle Royale kết thúc!';
+    } else {
+      podiumSubtitle.textContent = 'Chúc mừng các người chơi xuất sắc nhất!';
+    }
+
+    const p1 = (podium || []).find(p => p.rank === 1);
+    const p2 = (podium || []).find(p => p.rank === 2);
+    const p3 = (podium || []).find(p => p.rank === 3);
+
+    // 1st place
+    if (p1) {
+      podium1Avatar.textContent = p1.avatar;
+      podium1Name.textContent = `@${p1.nickname}`;
+      podium1Score.textContent = `${p1.score} đ`;
+    } else {
+      podium1Avatar.textContent = '👑';
+      podium1Name.textContent = '---';
+      podium1Score.textContent = '0 đ';
+    }
+
+    // 2nd place
+    if (p2) {
+      podium2Avatar.textContent = p2.avatar;
+      podium2Name.textContent = `@${p2.nickname}`;
+      podium2Score.textContent = `${p2.score} đ`;
+    } else {
+      podium2Avatar.textContent = '🥈';
+      podium2Name.textContent = '---';
+      podium2Score.textContent = '0 đ';
+    }
+
+    // 3rd place
+    if (p3) {
+      podium3Avatar.textContent = p3.avatar;
+      podium3Name.textContent = `@${p3.nickname}`;
+      podium3Score.textContent = `${p3.score} đ`;
+    } else {
+      podium3Avatar.textContent = '🥉';
+      podium3Name.textContent = '---';
+      podium3Score.textContent = '0 đ';
+    }
+
+    // Others (rank 4+)
+    podiumOtherList.innerHTML = '';
+    const others = (podium || []).filter(p => p.rank > 3);
+    others.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs';
+      item.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="text-slate-400 font-semibold">#${p.rank}</span>
+          <span>${p.avatar}</span>
+          <span class="font-medium text-slate-700 truncate max-w-[120px]">${p.nickname}</span>
+        </div>
+        <span class="font-semibold text-slate-600 font-mono">${p.score} đ</span>
+      `;
+      podiumOtherList.appendChild(item);
+    });
+
+    const me = currentRoom ? currentRoom.players.find(p => p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken)) : null;
+    const amIHost = me ? me.isHost : false;
+
+    if (amIHost) {
+      btnPlayAgainMatch.disabled = false;
+      btnPlayAgainMatch.classList.remove('opacity-50', 'cursor-not-allowed');
+      btnPlayAgainMatch.textContent = 'Chơi ván mới';
+    } else {
+      btnPlayAgainMatch.disabled = true;
+      btnPlayAgainMatch.classList.add('opacity-50', 'cursor-not-allowed');
+      btnPlayAgainMatch.textContent = 'Chờ chủ phòng đấu lại...';
+    }
+
+    modalPodium.classList.remove('hidden');
+  });
+
+  // Confetti Animation Effect
+  function spawnConfetti() {
+    const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6'];
+    for (let i = 0; i < 30; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = `${Math.random() * 100}vw`;
+      piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDuration = `${2 + Math.random() * 2.5}s`;
+      piece.style.animationDelay = `${Math.random() * 0.5}s`;
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4000);
+    }
+  }
+
+});
