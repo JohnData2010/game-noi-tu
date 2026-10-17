@@ -54,24 +54,6 @@ input, select, textarea {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
 }
 
-/* Prevent room badge from wrapping or overflowing on mobile */
-#navRoomBadge {
-  display: inline-flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  white-space: nowrap !important;
-  flex-shrink: 0 !important;
-}
-
-#navRoomBadge * {
-  white-space: nowrap !important;
-  flex-shrink: 0 !important;
-}
-
-#navRoomBadge.hidden {
-  display: none !important;
-}
 
 /* Snug input positioning when virtual keyboard is open on small mobile devices */
 @media (max-width: 640px) {

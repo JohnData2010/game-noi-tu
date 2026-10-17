@@ -289,20 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (view === 'lobby') {
       viewLobby.classList.remove('hidden');
-      navRoomBadge.classList.add('hidden');
-      navRoomBadge.classList.remove('flex');
       btnLeaveRoom.classList.add('hidden');
       btnLeaveRoom.classList.remove('flex');
     } else if (view === 'waiting') {
       viewWaitingRoom.classList.remove('hidden');
-      navRoomBadge.classList.remove('hidden');
-      navRoomBadge.classList.add('flex');
       btnLeaveRoom.classList.remove('hidden');
       btnLeaveRoom.classList.add('flex');
     } else if (view === 'game') {
       viewGame.classList.remove('hidden');
-      navRoomBadge.classList.remove('hidden');
-      navRoomBadge.classList.add('flex');
       btnLeaveRoom.classList.remove('hidden');
       btnLeaveRoom.classList.add('flex');
     }
@@ -529,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnShareRoomNative.addEventListener('click', shareRoomNative);
-  navRoomBadge.addEventListener('click', shareRoomNative);
+  if (navRoomBadge) navRoomBadge.addEventListener('click', shareRoomNative);
 
   btnShowQrCode.addEventListener('click', () => {
     if (!currentRoom) return;
@@ -670,15 +664,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   socket.on('room_updated', (room) => {
     currentRoom = room;
-    navRoomCode.textContent = room.id;
+    if (navRoomCode) navRoomCode.textContent = room.id;
     waitingRoomCode.textContent = room.id;
     if (room.turnDuration === 0) {
       roomDurationBadge.textContent = 'Không tính giờ';
-      timerNumber.textContent = '∞';
-      timerNumber.className = 'text-xl sm:text-2xl font-black text-slate-400 font-mono';
-      timerProgressBar.style.width = '100%';
-      timerProgressBar.className = 'h-full bg-slate-200 transition-all duration-300';
-      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+      timerNumber.textContent = '';
+      if (timerBox) {
+        timerBox.classList.add('hidden');
+        timerBox.classList.remove('flex');
+      }
+      const timerProgressWrapper = document.getElementById('timerProgressWrapper');
+      if (timerProgressWrapper) timerProgressWrapper.classList.add('hidden');
     } else {
       roomDurationBadge.textContent = `${room.turnDuration}s`;
     }
