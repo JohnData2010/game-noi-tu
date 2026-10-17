@@ -38,6 +38,15 @@ function getLocalIp() {
 
 const roomManager = new RoomManager(io);
 
+// Health check endpoint for uptime monitoring & keep-alive
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API route to get dictionary status and stats
 app.get('/api/stats', (req, res) => {
   const localIp = getLocalIp();
@@ -155,4 +164,19 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`📱 Chơi trên điện thoại (cùng Wi-Fi): http://${localIp}:${PORT}`);
   console.log(`📚 Từ điển đã nạp: ${dictionary.wordSet.size} từ ghép tiếng Việt`);
   console.log(`===============================================`);
+
+  // Render Free Tier Keep-Alive: Ping itself every 10 minutes to prevent cold sleep
+  const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL || 'https://game-noi-tu-a6ja.onrender.com';
+  if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+    const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes (Render spins down after 15 min idle)
+    setInterval(async () => {
+      try {
+        const res = await fetch(`${RENDER_EXTERNAL_URL}/health`);
+        console.log(`[Keep-Alive] Pinged ${RENDER_EXTERNAL_URL}/health - Status: ${res.status}`);
+      } catch (err) {
+        console.warn(`[Keep-Alive] Ping warning: ${err.message}`);
+      }
+    }, PING_INTERVAL);
+    console.log(`[Keep-Alive] Auto-ping active for ${RENDER_EXTERNAL_URL} every 10 minutes.`);
+  }
 });
