@@ -79,4 +79,26 @@ const test14 = referee.validate('bắt trend', 'bắt', new Set());
 assert.strictEqual(test14.valid, true, 'Should accept modern word "bắt trend"');
 console.log('✓ Accepts modern word "bắt trend"');
 
+const test15 = referee.validate('đu trend', 'đu', new Set());
+assert.strictEqual(test15.valid, true, 'Should accept modern word "đu trend"');
+console.log('✓ Accepts modern word "đu trend"');
+
+const test16 = referee.validate('sống ảo', 'sống', new Set());
+assert.strictEqual(test16.valid, true, 'Should accept modern word "sống ảo"');
+console.log('✓ Accepts modern word "sống ảo"');
+
+const test17 = referee.validate('chữa lành', 'chữa', new Set());
+assert.strictEqual(test17.valid, true, 'Should accept modern word "chữa lành"');
+console.log('✓ Accepts modern word "chữa lành"');
+
+const test18 = referee.validate('trà sữa', 'trà', new Set());
+assert.strictEqual(test18.valid, true, 'Should accept modern word "trà sữa"');
+console.log('✓ Accepts modern word "trà sữa"');
+
+// Test 9: Unicode NFD (Decomposed from mobile keyboards)
+const nfdTrongCay = 'trồng cây'.normalize('NFD');
+const test19 = referee.validate(nfdTrongCay, 'trồng', new Set());
+assert.strictEqual(test19.valid, true, 'Should accept decomposed NFD input from mobile keyboards');
+console.log('✓ Accepts decomposed NFD "trồng cây" from iOS/mobile keyboards');
+
 console.log('All Referee tests passed successfully! 🎉');

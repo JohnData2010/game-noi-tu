@@ -593,27 +593,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================= GAMEPLAY ACTIONS =================
   formWordSubmit.addEventListener('submit', (e) => {
     e.preventDefault();
-    const rawInput = inputWord.value.trim().toLowerCase();
+    const rawInput = inputWord.value.trim().toLowerCase().replace(/\s+/g, ' ').normalize('NFC');
     if (!rawInput) return;
 
-    const prefix = (currentRoom?.expectedSyllable || '').trim().toLowerCase();
+    const prefix = (currentRoom?.expectedSyllable || '').trim().toLowerCase().replace(/\s+/g, ' ').normalize('NFC');
     let fullWord = '';
 
     if (prefix) {
-      if (rawInput.startsWith(prefix + ' ')) {
-        fullWord = rawInput;
-      } else if (rawInput === prefix) {
+      const parts = rawInput.split(' ');
+      if (parts.length >= 2 && parts[0] === prefix) {
+        fullWord = `${parts[0]} ${parts[1]}`;
+      } else if (parts.length === 1 && parts[0] === prefix) {
         showToast('Vui lòng nhập thêm tiếng thứ 2!', 'warning');
         return;
+      } else if (parts.length === 1) {
+        fullWord = `${prefix} ${parts[0]}`;
       } else {
-        fullWord = `${prefix} ${rawInput}`;
+        fullWord = rawInput;
       }
     } else {
       fullWord = rawInput;
     }
 
     window.soundManager.playPop();
-    socket.emit('submit_word', fullWord);
+    socket.emit('submit_word', fullWord.normalize('NFC'));
     inputWord.value = '';
 
     setTimeout(() => {
