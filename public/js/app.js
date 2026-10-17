@@ -415,11 +415,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isTimerEnabled) {
         turnDuration = selectedTimedSeconds || 15;
         if (timerDurationsContainer) timerDurationsContainer.classList.remove('hidden');
-        if (timerToggleDesc) timerToggleDesc.textContent = `⏱️ Đang bật tính giờ: ${turnDuration} giây / lượt`;
       } else {
         turnDuration = 0;
         if (timerDurationsContainer) timerDurationsContainer.classList.add('hidden');
-        if (timerToggleDesc) timerToggleDesc.textContent = '✨ Không tính giờ (vô hạn thời gian suy nghĩ)';
       }
       window.soundManager.playPop();
     });
@@ -429,13 +427,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.btn-time-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-time-opt').forEach(b => {
-        b.className = 'btn-time-opt py-2.5 rounded-xl text-sm sm:text-base font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300';
+        b.className = 'btn-time-opt py-1.5 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-slate-300';
       });
-      btn.className = 'btn-time-opt py-2.5 rounded-xl text-sm sm:text-base font-bold border-2 border-blue-600 bg-blue-50 text-blue-700';
+      btn.className = 'btn-time-opt py-1.5 rounded-xl text-xs sm:text-sm font-bold border-2 border-blue-600 bg-blue-50 text-blue-700';
       selectedTimedSeconds = parseInt(btn.dataset.time, 10);
       if (isTimerEnabled) {
         turnDuration = selectedTimedSeconds;
-        if (timerToggleDesc) timerToggleDesc.textContent = `⏱️ Đang bật tính giờ: ${turnDuration} giây / lượt`;
       }
       window.soundManager.playPop();
     });
@@ -711,8 +708,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clientControls.classList.remove('hidden');
         btnToggleReady.textContent = me?.isReady ? 'Hủy sẵn sàng' : 'Sẵn sàng';
         btnToggleReady.className = me?.isReady 
-          ? 'w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-lg shadow-sm transition active:scale-98'
-          : 'w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg shadow-sm transition active:scale-98';
+          ? 'w-full py-2.5 sm:py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm sm:text-base shadow-xs transition active:scale-98'
+          : 'w-full py-2.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-xs transition active:scale-98';
       }
     } else if (room.status === 'playing' || room.status === 'round_ended' || room.status === 'match_ended' || room.status === 'ended') {
       showView('game');
@@ -728,29 +725,29 @@ document.addEventListener('DOMContentLoaded', () => {
     waitingPlayersList.innerHTML = '';
     players.forEach(p => {
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 transition';
+      item.className = 'flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 transition';
       
       const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
       item.innerHTML = `
-        <div class="flex items-center space-x-3 min-w-0">
-          <span class="flex-shrink-0 flex items-center justify-center w-9 h-9">${renderAvatarHtml(p.avatar, 'w-9 h-9 text-2xl')}</span>
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <span class="flex-shrink-0 flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8">${renderAvatarHtml(p.avatar, 'w-7 h-7 sm:w-8 sm:h-8 text-base')}</span>
           <div class="min-w-0">
-            <div class="text-base sm:text-lg font-bold text-slate-900 flex items-center space-x-2 truncate">
+            <div class="text-xs sm:text-sm font-semibold text-slate-800 flex items-center space-x-1.5 truncate">
               <span class="truncate">${p.nickname}</span>
-              ${isMe ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-black flex-shrink-0">BẠN</span>' : ''}
-              ${p.isHost ? '<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-black flex-shrink-0">Chủ phòng</span>' : ''}
-              ${p.isBot ? '<span class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-black flex-shrink-0">Bot</span>' : ''}
-              ${p.isDisconnected ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-black flex-shrink-0">Mất mạng</span>' : ''}
+              ${isMe ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded font-bold flex-shrink-0">BẠN</span>' : ''}
+              ${p.isHost ? '<span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold flex-shrink-0">Chủ phòng</span>' : ''}
+              ${p.isBot ? '<span class="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded font-bold flex-shrink-0">Bot</span>' : ''}
+              ${p.isDisconnected ? '<span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.2 rounded font-bold flex-shrink-0">Mất mạng</span>' : ''}
             </div>
           </div>
         </div>
-        <div class="flex items-center space-x-2 flex-shrink-0">
+        <div class="flex items-center space-x-1.5 flex-shrink-0">
           ${p.isHost 
-            ? '<span class="text-sm sm:text-base font-bold text-emerald-600">Sẵn sàng</span>' 
+            ? '<span class="text-xs font-semibold text-emerald-600">Sẵn sàng</span>' 
             : p.isReady 
-              ? '<span class="text-sm sm:text-base font-bold text-emerald-600">Sẵn sàng</span>' 
-              : '<span class="text-sm sm:text-base font-semibold text-slate-400">Đang chờ</span>'}
-          ${amIHost && p.isBot ? `<button onclick="window.removeBot('${p.id}')" class="text-slate-400 hover:text-red-500 p-1.5" title="Xóa Bot"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+              ? '<span class="text-xs font-semibold text-emerald-600">Sẵn sàng</span>' 
+              : '<span class="text-xs font-medium text-slate-400">Đang chờ</span>'}
+          ${amIHost && p.isBot ? `<button onclick="window.removeBot('${p.id}')" class="text-slate-400 hover:text-red-500 p-1" title="Xóa Bot"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
         </div>
       `;
       waitingPlayersList.appendChild(item);
@@ -784,18 +781,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const badge = document.createElement('div');
       const isTurn = activePlayer && p.id === activePlayer.id;
       const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
-      badge.className = `flex-shrink-0 flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 ${
+      badge.className = `flex-shrink-0 flex items-center space-x-1.5 px-2 py-0.5 rounded-lg border text-[11px] sm:text-xs font-semibold transition-all duration-200 ${
         isTurn 
-          ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs ring-2 ring-blue-400/50' 
+          ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs ring-1 ring-blue-400/50' 
           : p.isAlive 
             ? 'bg-slate-50 border-slate-200 text-slate-700' 
             : 'bg-red-50/70 border-red-200 text-red-400 opacity-50'
       }`;
       badge.innerHTML = `
-        <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-4 h-4 sm:w-5 sm:h-5 text-sm')}</span>
+        <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-4 h-4 text-xs')}</span>
         <span class="max-w-[85px] sm:max-w-[105px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
-        ${isTurn ? '<span class="text-blue-600 text-xs font-black animate-pulse">●</span>' : p.isAlive ? '<span class="text-emerald-500 text-xs font-bold">●</span>' : '<span class="text-red-500 text-xs font-bold">✕</span>'}
-        <span class="text-xs text-slate-400 font-mono font-bold">(${p.score || 0})</span>
+        ${isTurn ? '<span class="text-blue-600 text-[10px] font-black animate-pulse">●</span>' : p.isAlive ? '<span class="text-emerald-500 text-[10px] font-bold">●</span>' : '<span class="text-red-500 text-[10px] font-bold">✕</span>'}
+        <span class="text-[11px] text-slate-400 font-mono font-medium">(${p.score || 0})</span>
       `;
       gamePlayersStrip.appendChild(badge);
     });
@@ -896,23 +893,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isMe) {
       bubbleWrapper.innerHTML = `
         <div class="flex flex-col items-end max-w-[85%]">
-          <div class="chat-bubble-me px-4 py-2 text-lg sm:text-xl font-black break-words tracking-wide">
+          <div class="chat-bubble-me px-3.5 py-1.5 text-sm sm:text-base font-bold break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
+          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
         </div>
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-base flex-shrink-0 overflow-hidden mb-3">
-          ${renderAvatarHtml(avatar, 'w-full h-full text-base')}
+        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden mb-2">
+          ${renderAvatarHtml(avatar, 'w-full h-full text-sm')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
-          <span class="text-xs font-bold text-slate-500 ml-1 mb-0.5">${nickname}</span>
-          <div class="chat-bubble-other px-4 py-2 text-lg sm:text-xl font-black break-words tracking-wide">
+          <span class="text-[11px] font-semibold text-slate-500 ml-1 mb-0.5">${nickname}</span>
+          <div class="chat-bubble-other px-3.5 py-1.5 text-sm sm:text-base font-bold break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
+          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
         </div>
       `;
     }
@@ -968,23 +965,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isMe) {
       bubbleWrapper.innerHTML = `
         <div class="flex flex-col items-end max-w-[85%]">
-          <div class="px-4 py-2 rounded-2xl bg-blue-500 text-white text-base sm:text-lg font-medium break-words">
+          <div class="px-3 py-1.5 rounded-2xl bg-blue-600 text-white text-xs sm:text-sm font-medium break-words">
             ${text}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
+          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
         </div>
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden mb-1">
-          ${renderAvatarHtml(avatar, 'w-full h-full text-sm')}
+        <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs sm:text-sm flex-shrink-0 overflow-hidden mb-1">
+          ${renderAvatarHtml(avatar, 'w-full h-full text-xs sm:text-sm')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
-          <span class="text-xs font-bold text-slate-500 ml-1 mb-0.5">${nickname}</span>
-          <div class="px-4 py-2 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 text-base sm:text-lg font-medium break-words">
+          <span class="text-[11px] font-semibold text-slate-500 ml-1 mb-0.5">${nickname}</span>
+          <div class="px-3 py-1.5 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 text-xs sm:text-sm font-medium break-words">
             ${text}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
+          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
         </div>
       `;
     }
@@ -1043,14 +1040,14 @@ document.addEventListener('DOMContentLoaded', () => {
     roundLeaderboardList.innerHTML = '';
     (leaderboard || []).forEach(item => {
       const row = document.createElement('div');
-      row.className = 'flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200 shadow-xs';
+      row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs';
       row.innerHTML = `
-        <div class="flex items-center space-x-3 min-w-0">
-          <span class="w-6 font-bold text-center text-base text-slate-400">#${item.rank}</span>
-          <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center">${renderAvatarHtml(item.avatar, 'w-8 h-8 text-lg')}</span>
-          <span class="text-base font-bold text-slate-800 truncate max-w-[140px]">${item.nickname}</span>
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <span class="w-5 font-bold text-center text-xs text-slate-400">#${item.rank}</span>
+          <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center">${renderAvatarHtml(item.avatar, 'w-7 h-7 text-sm')}</span>
+          <span class="text-xs sm:text-sm font-bold text-slate-800 truncate max-w-[140px]">${item.nickname}</span>
         </div>
-        <span class="text-base font-black text-blue-600 font-mono">${item.score} đ</span>
+        <span class="text-xs sm:text-sm font-black text-blue-600 font-mono">${item.score} đ</span>
       `;
       roundLeaderboardList.appendChild(row);
     });
@@ -1089,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1st place
     if (p1) {
-      podium1Avatar.innerHTML = renderAvatarHtml(p1.avatar, 'w-14 h-14 text-4xl');
+      podium1Avatar.innerHTML = renderAvatarHtml(p1.avatar, 'w-10 h-10 text-2xl');
       podium1Name.textContent = `@${p1.nickname}`;
       podium1Score.textContent = `${p1.score} đ`;
     } else {
@@ -1100,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2nd place
     if (p2) {
-      podium2Avatar.innerHTML = renderAvatarHtml(p2.avatar, 'w-12 h-12 text-3xl');
+      podium2Avatar.innerHTML = renderAvatarHtml(p2.avatar, 'w-9 h-9 text-xl');
       podium2Name.textContent = `@${p2.nickname}`;
       podium2Score.textContent = `${p2.score} đ`;
     } else {
@@ -1111,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3rd place
     if (p3) {
-      podium3Avatar.innerHTML = renderAvatarHtml(p3.avatar, 'w-12 h-12 text-3xl');
+      podium3Avatar.innerHTML = renderAvatarHtml(p3.avatar, 'w-9 h-9 text-xl');
       podium3Name.textContent = `@${p3.nickname}`;
       podium3Score.textContent = `${p3.score} đ`;
     } else {
@@ -1125,11 +1122,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const others = (podium || []).filter(p => p.rank > 3);
     others.forEach(p => {
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm sm:text-base font-semibold';
+      item.className = 'flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold';
       item.innerHTML = `
-        <div class="flex items-center space-x-3">
-          <span class="text-slate-400 font-bold text-sm">#${p.rank}</span>
-          <span class="w-7 h-7 flex items-center justify-center flex-shrink-0">${renderAvatarHtml(p.avatar, 'w-7 h-7 text-sm')}</span>
+        <div class="flex items-center space-x-2.5">
+          <span class="text-slate-400 font-bold text-xs">#${p.rank}</span>
+          <span class="w-6 h-6 flex items-center justify-center flex-shrink-0">${renderAvatarHtml(p.avatar, 'w-6 h-6 text-xs')}</span>
           <span class="font-bold text-slate-700 truncate max-w-[140px]">${p.nickname}</span>
         </div>
         <span class="font-black text-slate-600 font-mono">${p.score} đ</span>

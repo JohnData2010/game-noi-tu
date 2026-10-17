@@ -17,9 +17,10 @@ html, body {
   padding: 0;
   overflow: hidden;
   overscroll-behavior: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #f8fafc;
   color: #0f172a;
   touch-action: manipulation;
@@ -140,16 +141,16 @@ input, select, textarea {
 .chat-bubble-me {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
-  border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 2px 6px -1px rgba(37, 99, 235, 0.3);
-  font-size: 1.125rem;
-  font-weight: 800;
-  line-height: 1.35;
+  border-radius: 16px 16px 4px 16px;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 @media (min-width: 640px) {
   .chat-bubble-me {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 }
 
@@ -157,16 +158,16 @@ input, select, textarea {
   background-color: #ffffff;
   color: #0f172a;
   border: 1px solid #e2e8f0;
-  border-radius: 18px 18px 18px 4px;
-  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.05);
-  font-size: 1.125rem;
-  font-weight: 800;
-  line-height: 1.35;
+  border-radius: 16px 16px 16px 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 @media (min-width: 640px) {
   .chat-bubble-other {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 }
 
@@ -174,7 +175,7 @@ input, select, textarea {
   background-color: #fefce8;
   border: 1px solid #fef08a;
   color: #854d0e;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -182,8 +183,8 @@ input, select, textarea {
   background-color: #fef2f2;
   border: 1px solid #fecaca;
   color: #b91c1c;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 /* Modern 3D Olympic Podium */
