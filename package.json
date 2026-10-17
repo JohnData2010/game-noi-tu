@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/referee.test.js && node tests/simulation.test.js && node tests/mobile_reconnect.test.js && node tests/rounds_podium.test.js && node tests/battle_royale.test.js && node tests/no_timer.test.js",
+    "test": "node tests/referee.test.js && node tests/simulation.test.js && node tests/mobile_reconnect.test.js && node tests/rounds_podium.test.js && node tests/battle_royale.test.js && node tests/no_timer.test.js && node tests/tab_switch_history.test.js",
     "build:dict": "node scripts/build-dictionary.js"
   },
   "keywords": [],

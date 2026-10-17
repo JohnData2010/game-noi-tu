@@ -104,6 +104,17 @@ io.on('connection', (socket) => {
     roomManager.submitWord(socket, word);
   });
 
+  // Synchronize room session on tab focus / visibility
+  socket.on('sync_session', (data) => {
+    try {
+      if (data && data.roomId) {
+        roomManager.syncSession(socket, data);
+      }
+    } catch (err) {
+      console.error('Error syncing session:', err);
+    }
+  });
+
   // General chat / banter message
   socket.on('send_chat', (data) => {
     const roomId = socket.roomId;
@@ -117,13 +128,15 @@ io.on('connection', (socket) => {
     const text = (typeof data === 'string' ? data : data?.text || '').trim();
     if (!text) return;
 
-    io.to(roomId).emit('chat_bubble', {
+    const bubblePayload = {
       senderId: player.id,
       nickname: player.nickname,
       avatar: player.avatar,
       text,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-    });
+    };
+    roomManager.addHistory(room, 'chat_bubble', bubblePayload);
+    io.to(roomId).emit('chat_bubble', bubblePayload);
   });
 
   // Disconnect

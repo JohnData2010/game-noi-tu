@@ -131,6 +131,7 @@ async function testRoundsAndPodium() {
   server.close();
 
   console.log('--- ALL 3-ROUND MATCH & PODIUM TESTS PASSED! 🎉 ---');
+  process.exit(0);
 }
 
 testRoundsAndPodium().catch(err => {

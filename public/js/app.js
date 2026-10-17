@@ -12,12 +12,19 @@ document.addEventListener('DOMContentLoaded', () => {
     reconnectionDelay: 1000
   });
 
-  // App State
+  // App State - tab isolated
+  let tabId = sessionStorage.getItem('noitu_tab_id');
+  if (!tabId) {
+    tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    sessionStorage.setItem('noitu_tab_id', tabId);
+  }
   let myId = null;
   let mySessionToken = sessionStorage.getItem('noitu_session_token') || null;
   let currentRoom = null;
   let selectedAvatar = localStorage.getItem('noitu_avatar') || '🐰';
-  let turnDuration = 0; // Default: Không tính giờ (unlimited time)
+  let isTimerEnabled = false; // Default: Không tính giờ
+  let turnDuration = 0; // Default: 0 = Vô hạn thời gian
+  let selectedTimedSeconds = 15; // Mốc giây khi bật tính giờ (mặc định 15s)
   let selectedRounds = 3;
   let selectedGameMode = 'rounds'; // 'rounds' | 'battle_royale'
   let isSoundEnabled = true;
@@ -55,9 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const brDescGroup = document.getElementById('brDescGroup');
 
   // Timer Elements
+  const toggleTimerSwitch = document.getElementById('toggleTimerSwitch');
+  const timerToggleDesc = document.getElementById('timerToggleDesc');
+  const timerDurationsContainer = document.getElementById('timerDurationsContainer');
   const timerDurationsRow = document.getElementById('timerDurationsRow');
-  const noTimerNotice = document.getElementById('noTimerNotice');
-  let isTimerEnabled = false;
 
   // Waiting Room Elements
   const waitingRoomCode = document.getElementById('waitingRoomCode');
@@ -223,35 +231,46 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function syncRoomSession() {
-    const savedRoomId = sessionStorage.getItem('noitu_room_id') || localStorage.getItem('noitu_room_id');
-    const savedToken = sessionStorage.getItem('noitu_session_token') || localStorage.getItem('noitu_session_token');
+    const savedRoomId = sessionStorage.getItem('noitu_room_id') || localStorage.getItem(`noitu_room_${tabId}`) || localStorage.getItem('noitu_last_room');
+    const savedToken = sessionStorage.getItem('noitu_session_token') || localStorage.getItem(`noitu_session_${tabId}`);
     if (savedRoomId && savedToken) {
-      socket.emit('join_room', {
-        roomId: savedRoomId,
-        sessionToken: savedToken,
-        nickname: localStorage.getItem('noitu_nickname') || 'Người chơi',
-        avatar: selectedAvatar
-      });
+      if (currentRoom && currentRoom.id === savedRoomId && socket.connected) {
+        socket.emit('sync_session', {
+          roomId: savedRoomId,
+          sessionToken: savedToken
+        });
+      } else {
+        socket.emit('join_room', {
+          roomId: savedRoomId,
+          sessionToken: savedToken,
+          nickname: localStorage.getItem('noitu_nickname') || 'Người chơi',
+          avatar: selectedAvatar
+        });
+      }
     }
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      updateViewport();
-      if (!socket.connected) {
-        socket.connect();
-      } else {
-        syncRoomSession();
-      }
-    }
-  });
-
-  window.addEventListener('focus', () => {
+  let lastVisibilitySync = 0;
+  function handleVisibilitySync() {
+    updateViewport();
+    const now = Date.now();
+    if (now - lastVisibilitySync < 600) return;
+    lastVisibilitySync = now;
     if (!socket.connected) {
       socket.connect();
     } else {
       syncRoomSession();
     }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      handleVisibilitySync();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    handleVisibilitySync();
   });
 
   // ================= VIEW SWITCHER =================
@@ -379,19 +398,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Turn Time Selection (0s: Không tính giờ, 10s, 15s, 20s)
+  // Timer switch toggle: Bật/Tắt tính giờ
+  if (toggleTimerSwitch) {
+    toggleTimerSwitch.addEventListener('change', () => {
+      isTimerEnabled = toggleTimerSwitch.checked;
+      if (isTimerEnabled) {
+        turnDuration = selectedTimedSeconds || 15;
+        if (timerDurationsContainer) timerDurationsContainer.classList.remove('hidden');
+        if (timerToggleDesc) timerToggleDesc.textContent = `⏱️ Đang bật tính giờ: ${turnDuration} giây / lượt`;
+      } else {
+        turnDuration = 0;
+        if (timerDurationsContainer) timerDurationsContainer.classList.add('hidden');
+        if (timerToggleDesc) timerToggleDesc.textContent = '✨ Không tính giờ (vô hạn thời gian suy nghĩ)';
+      }
+      window.soundManager.playPop();
+    });
+  }
+
+  // Turn Time Selection (10s, 15s, 20s, 30s)
   document.querySelectorAll('.btn-time-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-time-opt').forEach(b => {
-        b.className = 'btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300';
+        b.className = 'btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300';
       });
-      btn.className = 'btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-blue-600 bg-blue-50 text-blue-700';
-      turnDuration = parseInt(btn.dataset.time, 10);
-      isTimerEnabled = turnDuration > 0;
-      if (turnDuration === 0) {
-        noTimerNotice.textContent = '✨ Vô hạn thời gian suy nghĩ (không tính giờ)';
-      } else {
-        noTimerNotice.textContent = `⏱ Mỗi lượt có ${turnDuration} giây để đưa ra từ nối.`;
+      btn.className = 'btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border-2 border-blue-600 bg-blue-50 text-blue-700';
+      selectedTimedSeconds = parseInt(btn.dataset.time, 10);
+      if (isTimerEnabled) {
+        turnDuration = selectedTimedSeconds;
+        if (timerToggleDesc) timerToggleDesc.textContent = `⏱️ Đang bật tính giờ: ${turnDuration} giây / lượt`;
       }
       window.soundManager.playPop();
     });
@@ -606,8 +640,9 @@ document.addEventListener('DOMContentLoaded', () => {
     mySessionToken = sessionToken;
     sessionStorage.setItem('noitu_session_token', sessionToken);
     sessionStorage.setItem('noitu_room_id', roomId);
-    localStorage.setItem('noitu_session_token', sessionToken);
-    localStorage.setItem('noitu_room_id', roomId);
+    localStorage.setItem(`noitu_session_${tabId}`, sessionToken);
+    localStorage.setItem(`noitu_room_${tabId}`, roomId);
+    localStorage.setItem('noitu_last_room', roomId);
   });
 
   socket.on('error_message', (msg) => {
@@ -616,8 +651,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (msg.includes('không tồn tại') || msg.includes('giải tán')) {
       sessionStorage.removeItem('noitu_session_token');
       sessionStorage.removeItem('noitu_room_id');
-      localStorage.removeItem('noitu_session_token');
-      localStorage.removeItem('noitu_room_id');
+      localStorage.removeItem(`noitu_session_${tabId}`);
+      localStorage.removeItem(`noitu_room_${tabId}`);
       currentRoom = null;
       showView('lobby');
     }
@@ -664,7 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ? 'w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm shadow-sm transition active:scale-98'
           : 'w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98';
       }
-    } else if (room.status === 'playing' || room.status === 'round_ended' || room.status === 'match_ended') {
+    } else if (room.status === 'playing' || room.status === 'round_ended' || room.status === 'match_ended' || room.status === 'ended') {
       showView('game');
       if (room.status === 'playing') {
         modalRoundEnd.classList.add('hidden');
@@ -820,8 +855,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Turn Announcement Pill (Clean, Sleek, No Emojis Spam)
-  socket.on('turn_announcement', ({ nickname, avatar, syllable, startWord, isOpening }) => {
+  // Helper renderers for chat feed messages
+  function renderTurnAnnouncement({ nickname, avatar, syllable, startWord, isOpening }) {
     const pill = document.createElement('div');
     pill.className = 'flex items-center justify-center my-1.5';
     if (isOpening) {
@@ -839,15 +874,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     chatFeed.appendChild(pill);
     chatFeed.scrollTop = chatFeed.scrollHeight;
-  });
+  }
 
-  // Player Message (Word Submitted)
-  socket.on('player_message', ({ playerId, nickname, avatar, word, timestamp }) => {
-    const isMe = playerId === myId;
-    if (isMe) {
-      window.soundManager.playPop();
-    } else {
-      window.soundManager.playMessageReceived();
+  function renderPlayerMessage({ playerId, nickname, avatar, word, timestamp }, playSound = true) {
+    const isMe = playerId === myId || (currentRoom && currentRoom.players.find(p => p.id === playerId)?.sessionToken === mySessionToken);
+    if (playSound) {
+      if (isMe) window.soundManager.playPop();
+      else window.soundManager.playMessageReceived();
     }
 
     const bubbleWrapper = document.createElement('div');
@@ -859,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="chat-bubble-me px-4 py-2 rounded-2xl shadow-xs text-base sm:text-lg font-bold break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${timestamp}</span>
+          <span class="text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${timestamp || ''}</span>
         </div>
       `;
     } else {
@@ -872,18 +905,17 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="chat-bubble-other px-4 py-2 rounded-2xl text-base sm:text-lg font-bold break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${timestamp}</span>
+          <span class="text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${timestamp || ''}</span>
         </div>
       `;
     }
 
     chatFeed.appendChild(bubbleWrapper);
     chatFeed.scrollTop = chatFeed.scrollHeight;
-  });
+  }
 
-  // Player Eliminated Alert
-  socket.on('player_eliminated', ({ playerId, nickname, avatar, reason }) => {
-    window.soundManager.playBuzzer();
+  function renderEliminationMessage({ playerId, nickname, avatar, reason }, playSound = true) {
+    if (playSound) window.soundManager.playBuzzer();
 
     const card = document.createElement('div');
     card.className = 'flex items-center justify-center my-1.5';
@@ -895,10 +927,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chatFeed.appendChild(card);
     chatFeed.scrollTop = chatFeed.scrollHeight;
-  });
+  }
 
-  // Referee Note
-  socket.on('referee_message', ({ text }) => {
+  function renderRefereeMessage({ text }) {
     const card = document.createElement('div');
     card.className = 'flex items-center justify-center my-1.5';
     card.innerHTML = `
@@ -908,6 +939,72 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     chatFeed.appendChild(card);
     chatFeed.scrollTop = chatFeed.scrollHeight;
+  }
+
+  function renderChatBubble({ senderId, nickname, avatar, text, timestamp }, playSound = true) {
+    const isMe = senderId === myId;
+    if (playSound && !isMe) window.soundManager.playMessageReceived();
+
+    const bubbleWrapper = document.createElement('div');
+    bubbleWrapper.className = `flex items-end space-x-2 my-1 ${isMe ? 'justify-end' : 'justify-start'}`;
+
+    if (isMe) {
+      bubbleWrapper.innerHTML = `
+        <div class="flex flex-col items-end max-w-[85%]">
+          <div class="px-3.5 py-1.5 rounded-2xl bg-blue-500 text-white text-sm font-medium break-words">
+            ${text}
+          </div>
+          <span class="text-[10px] text-slate-400 mt-0.5 mr-1">${timestamp || ''}</span>
+        </div>
+      `;
+    } else {
+      bubbleWrapper.innerHTML = `
+        <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs flex-shrink-0 overflow-hidden">
+          ${renderAvatarHtml(avatar, 'w-full h-full text-xs')}
+        </div>
+        <div class="flex flex-col items-start max-w-[85%]">
+          <span class="text-[11px] font-semibold text-slate-500 ml-1">${nickname}</span>
+          <div class="px-3.5 py-1.5 rounded-2xl bg-slate-100 text-slate-800 text-sm font-medium break-words">
+            ${text}
+          </div>
+          <span class="text-[10px] text-slate-400 mt-0.5 ml-1">${timestamp || ''}</span>
+        </div>
+      `;
+    }
+    chatFeed.appendChild(bubbleWrapper);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  }
+
+  // Socket Events for Chat and Gameplay Messages
+  socket.on('turn_announcement', (data) => renderTurnAnnouncement(data));
+  socket.on('player_message', (data) => renderPlayerMessage(data, true));
+  socket.on('player_eliminated', (data) => renderEliminationMessage(data, true));
+  socket.on('referee_message', (data) => renderRefereeMessage(data));
+  socket.on('chat_bubble', (data) => renderChatBubble(data, true));
+
+  // Chat History Recovery (when tab recovers / reloads / reconnects)
+  socket.on('chat_history', (history) => {
+    if (!Array.isArray(history) || history.length === 0) return;
+    chatFeed.innerHTML = '';
+    history.forEach(item => {
+      if (item.type === 'player_message') renderPlayerMessage(item.data, false);
+      else if (item.type === 'turn_announcement') renderTurnAnnouncement(item.data);
+      else if (item.type === 'referee_message') renderRefereeMessage(item.data);
+      else if (item.type === 'player_eliminated') renderEliminationMessage(item.data, false);
+      else if (item.type === 'chat_bubble') renderChatBubble(item.data, false);
+    });
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  });
+
+  // Timer Paused / Resumed Alerts
+  socket.on('timer_paused', ({ timeRemaining }) => {
+    timerNumber.textContent = `${timeRemaining}s`;
+    timerNumber.className = 'text-xs sm:text-sm font-bold text-amber-500 font-mono animate-pulse';
+  });
+
+  socket.on('timer_resumed', ({ timeRemaining }) => {
+    timerNumber.textContent = `${timeRemaining}s`;
+    timerNumber.className = 'text-sm sm:text-base font-bold text-slate-800 font-mono';
   });
 
   // ================= ROUND ENDED =================

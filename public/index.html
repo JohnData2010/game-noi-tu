@@ -146,17 +146,32 @@
               1 hiệp sinh tồn duy nhất: Thời gian mỗi lượt co hẹp dần sau mỗi vòng, người sống sót cuối cùng là Quán quân!
             </div>
 
-            <!-- Turn time limit selection -->
-            <div class="space-y-1.5">
-              <label class="block text-sm font-bold text-slate-700">Thời gian mỗi lượt</label>
-              <div id="timerDurationsRow" class="grid grid-cols-4 gap-1.5">
-                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-blue-600 bg-blue-50 text-blue-700" data-time="0">Không tính giờ</button>
-                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="10">10 giây</button>
-                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="15">15 giây</button>
-                <button type="button" class="btn-time-opt py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300" data-time="20">20 giây</button>
+            <!-- Turn time limit selection: Option to choose timer or no timer -->
+            <div class="space-y-2 pt-0.5">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="pr-2">
+                  <div class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+                    <span>⏱️ Tính giờ lượt chơi</span>
+                  </div>
+                  <p id="timerToggleDesc" class="text-xs text-slate-500 font-medium mt-0.5">
+                    ✨ Không tính giờ (vô hạn thời gian suy nghĩ)
+                  </p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" id="toggleTimerSwitch" class="sr-only peer" />
+                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
               </div>
-              <div id="noTimerNotice" class="p-2 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs sm:text-sm text-slate-600 font-semibold">
-                ✨ Vô hạn thời gian suy nghĩ (không tính giờ)
+
+              <!-- Time options (hidden by default unless switch is checked) -->
+              <div id="timerDurationsContainer" class="hidden space-y-1.5 p-2.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                <label class="block text-xs font-bold text-slate-600">Thời gian cho mỗi lượt nối:</label>
+                <div id="timerDurationsRow" class="grid grid-cols-4 gap-1.5">
+                  <button type="button" class="btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300" data-time="10">10 giây</button>
+                  <button type="button" class="btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border-2 border-blue-600 bg-blue-50 text-blue-700" data-time="15">15 giây</button>
+                  <button type="button" class="btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300" data-time="20">20 giây</button>
+                  <button type="button" class="btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300" data-time="30">30 giây</button>
+                </div>
               </div>
             </div>
 

@@ -80,6 +80,7 @@ async function testMobileReconnection() {
   client1Reconnected.disconnect();
   server.close();
   console.log('--- MOBILE RECONNECTION TEST PASSED SUCCESSFULLY! 🎉 ---');
+  process.exit(0);
 }
 
 testMobileReconnection().catch(err => {

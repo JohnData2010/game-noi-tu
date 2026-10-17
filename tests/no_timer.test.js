@@ -132,6 +132,7 @@ async function testNoTimerAndTabSwitch() {
   client2Reconnected.disconnect();
   server.close();
   console.log('--- ALL NO-TIMER & TAB-SWITCH RECOVERY TESTS PASSED! 🎉 ---');
+  process.exit(0);
 }
 
 testNoTimerAndTabSwitch().catch(err => {

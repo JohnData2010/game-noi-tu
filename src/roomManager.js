@@ -59,8 +59,10 @@ class RoomManager {
       usedWords: new Set(),
       timer: null,
       timeRemaining: 0,
+      isTimerPaused: false,
       winner: null,
-      podium: null
+      podium: null,
+      chatHistory: []
     };
 
     this.rooms.set(roomId, room);
@@ -72,6 +74,55 @@ class RoomManager {
     this.broadcastRoomUpdate(room);
 
     return room;
+  }
+
+  addHistory(room, type, data) {
+    if (!room) return;
+    if (!room.chatHistory) room.chatHistory = [];
+    room.chatHistory.push({ type, data });
+    if (room.chatHistory.length > 60) {
+      room.chatHistory.shift();
+    }
+  }
+
+  syncSession(socket, data = {}) {
+    const roomId = data.roomId?.toUpperCase();
+    const room = this.getRoom(roomId);
+    if (!room) return;
+
+    if (data.sessionToken) {
+      const existing = room.players.find(p => p.sessionToken === data.sessionToken);
+      if (existing) {
+        if (existing.disconnectTimeout) {
+          clearTimeout(existing.disconnectTimeout);
+          existing.disconnectTimeout = null;
+        }
+        existing.id = socket.id;
+        existing.isDisconnected = false;
+        if (existing.isHost) room.hostId = socket.id;
+
+        socket.join(roomId);
+        socket.roomId = roomId;
+        socket.sessionToken = existing.sessionToken;
+
+        socket.emit('session_created', { sessionToken: existing.sessionToken, roomId });
+        socket.emit('chat_history', room.chatHistory || []);
+        this.broadcastRoomUpdate(room);
+
+        if (room.status === 'playing') {
+          const existingIndex = room.players.indexOf(existing);
+          if (room.isTimerPaused && room.turnIndex === existingIndex) {
+            this.resumeTurnTimer(room);
+          } else {
+            socket.emit('timer_tick', {
+              timeRemaining: room.timeRemaining || 0,
+              totalDuration: room.turnDuration || 0,
+              isUnlimited: room.turnDuration === 0
+            });
+          }
+        }
+      }
+    }
   }
 
   joinRoom(socket, roomId, data = {}) {
@@ -101,17 +152,25 @@ class RoomManager {
         socket.sessionToken = existing.sessionToken;
 
         socket.emit('session_created', { sessionToken: existing.sessionToken, roomId });
+        // Restore all previous chat / referee messages
+        socket.emit('chat_history', room.chatHistory || []);
         this.broadcastRoomUpdate(room);
 
         // Sync active timer state if match is ongoing
         if (room.status === 'playing') {
-          socket.emit('timer_tick', {
-            timeRemaining: room.timeRemaining || 0,
-            totalDuration: room.turnDuration || 0,
-            isUnlimited: room.turnDuration === 0
-          });
+          const existingIndex = room.players.indexOf(existing);
+          if (room.isTimerPaused && room.turnIndex === existingIndex) {
+            this.resumeTurnTimer(room);
+            this.sendRefereeMessage(roomId, `▶️ @${existing.nickname} đã quay lại! Tiếp tục lượt chơi.`);
+          } else {
+            socket.emit('timer_tick', {
+              timeRemaining: room.timeRemaining || 0,
+              totalDuration: room.turnDuration || 0,
+              isUnlimited: room.turnDuration === 0
+            });
+          }
           if (wasDisconnected) {
-            this.sendRefereeMessage(roomId, `✅ @${existing.nickname} đã kết nối lại.`);
+            this.sendRefereeMessage(roomId, `✅ @${existing.nickname} đã kết nối lại phòng.`);
           }
         }
         return room;
@@ -248,7 +307,7 @@ class RoomManager {
     room.expectedSyllable = startTail;
     room.usedWords.add(startWord);
 
-    this.io.to(room.id).emit('turn_announcement', {
+    const turnPayload = {
       nickname: activePlayer.nickname,
       avatar: activePlayer.avatar,
       syllable: startTail,
@@ -256,7 +315,9 @@ class RoomManager {
       isOpening: true,
       currentRound: room.roundNumber,
       maxRounds: room.maxRounds
-    });
+    };
+    this.addHistory(room, 'turn_announcement', turnPayload);
+    this.io.to(room.id).emit('turn_announcement', turnPayload);
 
     this.startTurnTimer(room);
     this.broadcastRoomUpdate(room);
@@ -285,6 +346,43 @@ class RoomManager {
       timeRemaining: room.timeRemaining,
       totalDuration: room.turnDuration,
       isUnlimited: false
+    });
+
+    room.timer = setInterval(() => {
+      room.timeRemaining -= 1;
+      this.io.to(room.id).emit('timer_tick', {
+        timeRemaining: room.timeRemaining,
+        totalDuration: room.turnDuration,
+        isUnlimited: false
+      });
+
+      if (room.timeRemaining <= 0) {
+        this.clearTurnTimer(room);
+        this.handleTimeout(room);
+      }
+    }, 1000);
+  }
+
+  pauseTurnTimer(room) {
+    if (room.timer) {
+      clearInterval(room.timer);
+      room.timer = null;
+    }
+    room.isTimerPaused = true;
+    this.io.to(room.id).emit('timer_paused', {
+      timeRemaining: room.timeRemaining || 0,
+      totalDuration: room.turnDuration || 0
+    });
+  }
+
+  resumeTurnTimer(room) {
+    if (!room.isTimerPaused || !room.turnDuration || room.turnDuration <= 0) return;
+    room.isTimerPaused = false;
+    this.clearTurnTimer(room);
+
+    this.io.to(room.id).emit('timer_resumed', {
+      timeRemaining: room.timeRemaining,
+      totalDuration: room.turnDuration
     });
 
     room.timer = setInterval(() => {
@@ -336,13 +434,15 @@ class RoomManager {
     this.clearTurnTimer(room);
 
     // Announce player's message in chat feed
-    this.io.to(room.id).emit('player_message', {
+    const playerMsg = {
       playerId: player.id,
       nickname: player.nickname,
       avatar: player.avatar,
       word: rawWord,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    });
+    };
+    this.addHistory(room, 'player_message', playerMsg);
+    this.io.to(room.id).emit('player_message', playerMsg);
 
     // Validate via Referee
     const verdict = referee.validate(rawWord, room.expectedSyllable, room.usedWords);
@@ -382,12 +482,14 @@ class RoomManager {
     }
 
     // Sound effect trigger & single clean referee elimination alert
-    this.io.to(room.id).emit('player_eliminated', {
+    const elimPayload = {
       playerId: player.id,
       nickname: player.nickname,
       avatar: player.avatar,
       reason
-    });
+    };
+    this.addHistory(room, 'player_eliminated', elimPayload);
+    this.io.to(room.id).emit('player_eliminated', elimPayload);
 
     const alivePlayers = room.players.filter(p => p.isAlive);
 
@@ -509,12 +611,14 @@ class RoomManager {
     room.turnIndex = nextIndex;
     const nextPlayer = room.players[room.turnIndex];
 
-    this.io.to(room.id).emit('turn_announcement', {
+    const turnPayload = {
       nickname: nextPlayer.nickname,
       avatar: nextPlayer.avatar,
       syllable: room.expectedSyllable,
       isOpening: false
-    });
+    };
+    this.addHistory(room, 'turn_announcement', turnPayload);
+    this.io.to(room.id).emit('turn_announcement', turnPayload);
 
     this.startTurnTimer(room);
     this.broadcastRoomUpdate(room);
@@ -548,12 +652,17 @@ class RoomManager {
   }
 
   sendRefereeMessage(roomId, text) {
-    this.io.to(roomId).emit('referee_message', {
+    const room = this.getRoom(roomId);
+    const refPayload = {
       sender: 'Trọng Tài',
       avatar: '⚖️',
       text,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    });
+    };
+    if (room) {
+      this.addHistory(room, 'referee_message', refPayload);
+    }
+    this.io.to(roomId).emit('referee_message', refPayload);
   }
 
   broadcastRoomUpdate(room) {
@@ -631,19 +740,31 @@ class RoomManager {
         this.broadcastRoomUpdate(room);
       }, 120000);
     } else if (room.status === 'playing') {
-      // 120-second grace period during live match for switching tabs/apps
-      setTimeout(() => {
-        if (leavingPlayer.isDisconnected && room.status === 'playing') {
-          this.sendRefereeMessage(roomId, `⚠️ @${leavingPlayer.nickname} tạm gián đoạn mạng (đang chờ kết nối lại)...`);
-        }
-      }, 5000);
+      const isMyTurn = room.turnIndex === playerIndex;
+
+      // If timed match and it's active player's turn: pause timer and allow 30s reconnect window
+      if (isMyTurn && room.turnDuration > 0) {
+        this.pauseTurnTimer(room);
+        this.sendRefereeMessage(roomId, `⚠️ @${leavingPlayer.nickname} tạm chuyển tab / gián đoạn mạng. Tạm dừng thời gian trong 30s...`);
+      } else {
+        setTimeout(() => {
+          if (leavingPlayer.isDisconnected && room.status === 'playing') {
+            this.sendRefereeMessage(roomId, `⚠️ @${leavingPlayer.nickname} tạm gián đoạn mạng (đang chờ kết nối lại)...`);
+          }
+        }, 4000);
+      }
       this.broadcastRoomUpdate(room);
+
+      const timeoutMs = (isMyTurn && room.turnDuration > 0) ? 30000 : 300000;
 
       leavingPlayer.disconnectTimeout = setTimeout(() => {
         if (!leavingPlayer.isDisconnected || room.status !== 'playing') return;
 
         leavingPlayer.isAlive = false;
-        this.sendRefereeMessage(roomId, `🚨 @${leavingPlayer.nickname} mất kết nối quá 2 phút và đã bị loại.`);
+        if (room.isTimerPaused && isMyTurn) {
+          room.isTimerPaused = false;
+        }
+        this.sendRefereeMessage(roomId, `🚨 @${leavingPlayer.nickname} mất kết nối quá thời gian chờ và đã bị loại.`);
 
         if (room.turnIndex === playerIndex) {
           this.advanceTurn(room, false);
@@ -651,16 +772,21 @@ class RoomManager {
           const alive = room.players.filter(p => p.isAlive);
           if (alive.length === 1) {
             const winner = alive[0];
+            winner.score = (winner.score || 0) + 50;
+            winner.roundsWon = (winner.roundsWon || 0) + 1;
             room.winner = winner;
-            room.status = 'ended';
+            room.status = 'match_ended';
             this.clearTurnTimer(room);
             const winnerPayload = { id: winner.id, nickname: winner.nickname, avatar: winner.avatar, score: winner.score || 0 };
-            this.io.to(room.id).emit('game_over', { winner: winnerPayload });
+            this.io.to(room.id).emit('match_finished', {
+              podium: [{ rank: 1, ...winnerPayload }],
+              totalRounds: room.maxRounds
+            });
             this.sendRefereeMessage(room.id, `👑 ${winner.avatar} @${winner.nickname} chiến thắng vì đối thủ mất kết nối!`);
           }
           this.broadcastRoomUpdate(room);
         }
-      }, 120000);
+      }, timeoutMs);
     }
   }
 }

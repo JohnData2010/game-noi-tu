@@ -138,6 +138,7 @@ async function runSimulation() {
   server.close();
 
   console.log('--- ALL MULTIPLAYER SIMULATION TESTS PASSED! 🎉 ---');
+  process.exit(0);
 }
 
 runSimulation().catch(err => {

@@ -103,6 +103,7 @@ async function testBattleRoyale() {
   p2.disconnect();
   server.close();
   console.log('--- BATTLE ROYALE TEST PASSED! 🎉 ---');
+  process.exit(0);
 }
 
 testBattleRoyale().catch(err => {
