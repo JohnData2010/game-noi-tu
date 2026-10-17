@@ -11,7 +11,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="/css/style.css?v=2.2" />
+  <link rel="stylesheet" href="/css/style.css?v=2.3" />
   <script>
     tailwind.config = {
       theme: {
@@ -163,6 +163,20 @@
               </div>
             </div>
 
+            <!-- Hint Option: 1 hint per player per round -->
+            <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <div class="flex flex-col">
+                <span class="text-xs sm:text-sm font-semibold text-slate-700 flex items-center space-x-1.5">
+                  <span>💡 Quyền trợ giúp gợi ý</span>
+                </span>
+                <span class="text-[11px] text-slate-400 font-medium">Mỗi người có 1 lần gợi ý/hiệp</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input type="checkbox" id="toggleHintSwitch" class="sr-only peer" checked />
+                <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
             <button id="btnActionCreate" class="w-full py-2.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-xs transition active:scale-98">
               Tạo phòng
             </button>
@@ -212,6 +226,7 @@
           <div class="flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-600">
             <span class="uppercase tracking-wider">Người chơi (<span id="playerCount">1</span>/8)</span>
             <div class="flex items-center space-x-1.5">
+              <span id="roomHintBadge" class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md text-[11px] font-semibold">💡 1 gợi ý</span>
               <span id="roomDurationBadge" class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[11px] font-semibold">15s</span>
               <span id="roomRoundsBadge" class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[11px] font-semibold">3 Hiệp</span>
             </div>
@@ -284,6 +299,18 @@
       <!-- Messenger Input Bar -->
       <div class="p-2 sm:p-2.5 bg-white border-t border-slate-200 flex-shrink-0 mobile-safe-bottom">
         <form id="formWordSubmit" class="flex items-center space-x-1.5 sm:space-x-2" autocomplete="off">
+          <!-- Hint button -->
+          <button
+            id="btnRequestHint"
+            type="button"
+            disabled
+            class="hidden h-9 px-2.5 sm:h-10 sm:px-3 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 font-bold text-xs sm:text-sm items-center space-x-1 shadow-xs transition flex-shrink-0 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+            title="Dùng gợi ý (1 lần/hiệp)"
+          >
+            <span>💡</span>
+            <span id="hintBadgeCount" class="font-mono text-xs">1</span>
+          </button>
+
           <div class="flex-1 flex items-center bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white rounded-full px-3 py-1 transition min-w-0">
             <!-- Locked Prefix Pill (ONLY shown on my turn) -->
             <div id="inputPrefixBadge" class="hidden items-center bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full text-xs sm:text-sm flex-shrink-0 select-none mr-1.5 shadow-xs">
@@ -457,6 +484,11 @@
             <li><strong>Battle Royale</strong>: 1 hiệp sinh tồn duy nhất, thời gian mỗi lượt co hẹp dần, người sống sót cuối cùng là Quán quân!</li>
           </ul>
         </div>
+
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1 text-amber-900">
+          <span class="font-bold text-amber-800">4. Quyền trợ giúp gợi ý (💡):</span>
+          <p>Mỗi người chơi có <strong>1 lượt gợi ý mỗi hiệp</strong> khi tới lượt của mình. Bấm biểu tượng <strong>💡 1</strong> cạnh ô nhập để hệ thống gợi ý ngay một từ nối chuẩn!</p>
+        </div>
       </div>
 
       <button id="btnAcknowledgeRules" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition active:scale-98 flex-shrink-0">
@@ -470,7 +502,7 @@
 
   <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/sound.js?v=2.2"></script>
-  <script src="/js/app.js?v=2.2"></script>
+  <script src="/js/sound.js?v=2.3"></script>
+  <script src="/js/app.js?v=2.3"></script>
 </body>
 </html>

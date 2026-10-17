@@ -122,6 +122,11 @@ io.on('connection', (socket) => {
     roomManager.submitWord(socket, word);
   });
 
+  // Request word hint (1 per round per player)
+  socket.on('request_hint', () => {
+    roomManager.requestHint(socket);
+  });
+
   // Synchronize room session on tab focus / visibility
   socket.on('sync_session', (data) => {
     try {

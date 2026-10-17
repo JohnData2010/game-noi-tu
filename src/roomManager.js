@@ -23,6 +23,7 @@ class RoomManager {
   createRoom(socket, data = {}) {
     const sessionToken = data.sessionToken || `st_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const roomId = this.generateRoomId();
+    const allowHints = data.allowHints !== false;
     const player = {
       id: socket.id,
       sessionToken,
@@ -32,6 +33,7 @@ class RoomManager {
       isAlive: true,
       isReady: true,
       score: 0,
+      hintsRemaining: allowHints ? 1 : 0,
       isBot: false,
       isDisconnected: false,
       disconnectTimeout: null
@@ -45,6 +47,7 @@ class RoomManager {
       id: roomId,
       hostId: socket.id,
       gameMode,
+      allowHints,
       initialTurnDuration: turnDuration,
       turnDuration,
       turnCount: 0,
@@ -197,6 +200,7 @@ class RoomManager {
       isAlive: true,
       isReady: false,
       score: 0,
+      hintsRemaining: room.allowHints !== false ? 1 : 0,
       isBot: false,
       isDisconnected: false,
       disconnectTimeout: null
@@ -291,9 +295,10 @@ class RoomManager {
     room.eliminatedOrder = [];
     room.roundNumber += 1;
 
-    // Reset players alive state for this round
+    // Reset players alive state and hints for this round
     for (const p of room.players) {
       p.isAlive = true;
+      p.hintsRemaining = room.allowHints !== false ? 1 : 0;
     }
 
     // Starting player is random or 1st player
@@ -415,6 +420,55 @@ class RoomManager {
 
     // Eliminate player for timeout
     this.eliminatePlayer(room, activePlayer, `Hết thời gian (${room.turnDuration}s) không đưa ra được từ nối!`);
+  }
+
+  requestHint(socket) {
+    const room = this.getRoom(socket.roomId);
+    if (!room || room.status !== 'playing') {
+      socket.emit('hint_response', { success: false, reason: 'Trận đấu chưa bắt đầu!' });
+      return;
+    }
+    if (room.allowHints === false) {
+      socket.emit('hint_response', { success: false, reason: 'Phòng không bật quyền trợ giúp gợi ý!' });
+      return;
+    }
+    const activePlayer = room.players[room.turnIndex];
+    if (!activePlayer || activePlayer.id !== socket.id) {
+      socket.emit('hint_response', { success: false, reason: 'Chưa tới lượt của bạn để xin gợi ý!' });
+      return;
+    }
+    if (!activePlayer.isAlive) {
+      socket.emit('hint_response', { success: false, reason: 'Bạn đã bị loại khỏi hiệp đấu!' });
+      return;
+    }
+    if ((activePlayer.hintsRemaining || 0) <= 0) {
+      socket.emit('hint_response', { success: false, reason: 'Bạn đã dùng hết lượt gợi ý của hiệp này!' });
+      return;
+    }
+
+    const options = dictionary.getNextOptions(room.expectedSyllable, room.usedWords);
+    if (!options || options.length === 0) {
+      socket.emit('hint_response', {
+        success: false,
+        reason: `Không còn từ nào trong từ điển nối được tiếng "${room.expectedSyllable}"!`
+      });
+      return;
+    }
+
+    const chosenWord = options[Math.floor(Math.random() * options.length)];
+    const parts = chosenWord.split(' ');
+    const tailSyllable = parts[1] || '';
+
+    activePlayer.hintsRemaining = 0;
+    socket.emit('hint_response', {
+      success: true,
+      word: chosenWord,
+      tail: tailSyllable,
+      hintsRemaining: 0
+    });
+
+    this.sendRefereeMessage(room.id, `💡 @${activePlayer.nickname} đã dùng quyền trợ giúp gợi ý từ!`);
+    this.broadcastRoomUpdate(room);
   }
 
   submitWord(socket, word) {
@@ -670,6 +724,7 @@ class RoomManager {
       id: room.id,
       hostId: room.hostId,
       gameMode: room.gameMode || 'rounds',
+      allowHints: room.allowHints !== false,
       turnDuration: room.turnDuration,
       status: room.status,
       turnIndex: room.turnIndex,
@@ -696,6 +751,7 @@ class RoomManager {
         score: p.score || 0,
         wordsCount: p.wordsCount || 0,
         roundsWon: p.roundsWon || 0,
+        hintsRemaining: p.hintsRemaining !== undefined ? p.hintsRemaining : (room.allowHints !== false ? 1 : 0),
         isBot: p.isBot,
         isDisconnected: p.isDisconnected
       }))

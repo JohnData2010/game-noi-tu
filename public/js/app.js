@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedTimedSeconds = 15; // Mốc giây khi bật tính giờ (mặc định 15s)
   let selectedRounds = 3;
   let selectedGameMode = 'rounds'; // 'rounds' | 'battle_royale'
+  let isHintEnabled = true; // Default: Bật gợi ý (1 lần/hiệp)
   let isSoundEnabled = true;
   let serverLocalIp = window.location.hostname;
   let serverPort = window.location.port || '3000';
@@ -61,17 +62,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const roundsSelectionGroup = document.getElementById('roundsSelectionGroup');
   const brDescGroup = document.getElementById('brDescGroup');
 
-  // Timer Elements
+  // Timer & Hint Elements
   const toggleTimerSwitch = document.getElementById('toggleTimerSwitch');
   const timerToggleDesc = document.getElementById('timerToggleDesc');
   const timerDurationsContainer = document.getElementById('timerDurationsContainer');
   const timerDurationsRow = document.getElementById('timerDurationsRow');
+  const toggleHintSwitch = document.getElementById('toggleHintSwitch');
 
   // Waiting Room Elements
   const waitingRoomCode = document.getElementById('waitingRoomCode');
   const btnShareRoomNative = document.getElementById('btnShareRoomNative');
   const btnShowQrCode = document.getElementById('btnShowQrCode');
   const playerCount = document.getElementById('playerCount');
+  const roomHintBadge = document.getElementById('roomHintBadge');
   const roomDurationBadge = document.getElementById('roomDurationBadge');
   const roomRoundsBadge = document.getElementById('roomRoundsBadge');
   const waitingPlayersList = document.getElementById('waitingPlayersList');
@@ -98,6 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputPrefixBadge = document.getElementById('inputPrefixBadge');
   const inputPrefixText = document.getElementById('inputPrefixText');
   const formWordSubmit = document.getElementById('formWordSubmit');
+  const btnRequestHint = document.getElementById('btnRequestHint');
+  const hintBadgeCount = document.getElementById('hintBadgeCount');
   const inputWord = document.getElementById('inputWord');
   const btnSendWord = document.getElementById('btnSendWord');
 
@@ -415,6 +420,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Hint toggle switch
+  if (toggleHintSwitch) {
+    toggleHintSwitch.addEventListener('change', () => {
+      isHintEnabled = toggleHintSwitch.checked;
+      window.soundManager.playPop();
+    });
+  }
+
   // Turn Time Selection (10s, 15s, 20s, 30s)
   document.querySelectorAll('.btn-time-opt').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -466,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
       avatar: selectedAvatar,
       turnDuration: isTimerEnabled ? turnDuration : 0,
       isUnlimitedTime: !isTimerEnabled,
+      allowHints: isHintEnabled,
       maxRounds: selectedRounds,
       gameMode: selectedGameMode,
       sessionToken: mySessionToken
@@ -613,6 +627,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Request word hint button
+  if (btnRequestHint) {
+    btnRequestHint.addEventListener('click', () => {
+      if (btnRequestHint.disabled) return;
+      window.soundManager.playPop();
+      btnRequestHint.disabled = true;
+      socket.emit('request_hint');
+    });
+  }
+
   // ================= MODAL ACTIONS =================
   btnOpenRules.addEventListener('click', () => modalRules.classList.remove('hidden'));
   btnCloseRules.addEventListener('click', () => modalRules.classList.add('hidden'));
@@ -681,6 +705,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (roomRoundsBadge) {
       roomRoundsBadge.textContent = room.gameMode === 'battle_royale' ? 'Battle Royale' : `${room.maxRounds} Hiệp`;
+    }
+    if (roomHintBadge) {
+      if (room.allowHints !== false) {
+        roomHintBadge.classList.remove('hidden');
+        roomHintBadge.textContent = '💡 1 gợi ý';
+      } else {
+        roomHintBadge.classList.add('hidden');
+      }
     }
     playerCount.textContent = room.players.length;
 
@@ -834,6 +866,29 @@ document.addEventListener('DOMContentLoaded', () => {
         inputWord.placeholder = `Chờ lượt @${activePlayer.nickname}...`;
       } else {
         inputWord.placeholder = 'Đang chờ...';
+      }
+    }
+
+    // Control hint button availability
+    if (btnRequestHint) {
+      if (room.allowHints !== false) {
+        btnRequestHint.classList.remove('hidden');
+        btnRequestHint.classList.add('flex');
+        const hintsLeft = me ? (me.hintsRemaining !== undefined ? me.hintsRemaining : 1) : 0;
+        if (hintBadgeCount) hintBadgeCount.textContent = hintsLeft;
+
+        if (isMyTurn && hintsLeft > 0) {
+          btnRequestHint.disabled = false;
+          btnRequestHint.classList.remove('opacity-30', 'pointer-events-none');
+          btnRequestHint.classList.add('hover:bg-amber-100', 'cursor-pointer');
+        } else {
+          btnRequestHint.disabled = true;
+          btnRequestHint.classList.add('opacity-30', 'pointer-events-none');
+          btnRequestHint.classList.remove('hover:bg-amber-100', 'cursor-pointer');
+        }
+      } else {
+        btnRequestHint.classList.add('hidden');
+        btnRequestHint.classList.remove('flex');
       }
     }
   }
@@ -1000,6 +1055,30 @@ document.addEventListener('DOMContentLoaded', () => {
   socket.on('player_eliminated', (data) => renderEliminationMessage(data, true));
   socket.on('referee_message', (data) => renderRefereeMessage(data));
   socket.on('chat_bubble', (data) => renderChatBubble(data, true));
+
+  // Hint Response Handler
+  socket.on('hint_response', (data) => {
+    if (!data.success) {
+      showToast(data.reason || 'Không thể lấy gợi ý!', 'warning');
+      window.soundManager.playBuzzer();
+      return;
+    }
+
+    window.soundManager.playPop();
+    showToast(`💡 Gợi ý từ cho bạn: "${data.word}"`, 'info');
+
+    // Auto-fill input
+    if (data.tail) {
+      inputWord.value = data.tail;
+    } else if (data.word) {
+      inputWord.value = data.word;
+    }
+    try {
+      inputWord.focus({ preventScroll: true });
+    } catch (e) {
+      inputWord.focus();
+    }
+  });
 
   // Chat History Recovery (when tab recovers / reloads / reconnects)
   socket.on('chat_history', (history) => {
