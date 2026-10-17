@@ -309,6 +309,9 @@
           <button id="btnBannerReturnLobby" type="button" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs sm:text-sm transition active:scale-95">
             🏠 Phòng chờ
           </button>
+          <button id="btnBannerLeaveRoom" type="button" class="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs sm:text-sm transition active:scale-95">
+            🚪 Thoát
+          </button>
         </div>
       </div>
 
@@ -380,6 +383,9 @@
         <button id="btnRoundReturnLobby" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition active:scale-98 flex items-center justify-center space-x-1.5">
           <span>🏠 Về phòng chờ (Chơi lại từ đầu)</span>
         </button>
+        <button id="btnRoundLeaveRoom" class="w-full py-1.5 rounded-xl text-red-600 hover:bg-red-50 text-xs font-semibold transition active:scale-98 flex items-center justify-center space-x-1">
+          <span>🚪 Thoát về trang chính</span>
+        </button>
       </div>
     </div>
   </div>
@@ -444,6 +450,9 @@
         </button>
         <button id="btnReturnLobby" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm shadow-xs transition active:scale-98 flex items-center justify-center space-x-1.5">
           <span>🏠 Về phòng chờ (Đổi số hiệp/giờ)</span>
+        </button>
+        <button id="btnPodiumLeaveRoom" class="w-full py-2 rounded-xl text-red-600 hover:bg-red-50 text-xs sm:text-sm font-semibold transition active:scale-98 flex items-center justify-center space-x-1.5">
+          <span>🚪 Thoát về trang chính</span>
         </button>
         <button id="btnClosePodium" class="w-full py-1 text-slate-400 hover:text-slate-600 text-xs font-medium transition">
           Xem lại bàn cờ
@@ -528,7 +537,7 @@
 
   <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/sound.js?v=2.5"></script>
-  <script src="/js/app.js?v=2.5"></script>
+  <script src="/js/sound.js?v=2.6"></script>
+  <script src="/js/app.js?v=2.6"></script>
 </body>
 </html>

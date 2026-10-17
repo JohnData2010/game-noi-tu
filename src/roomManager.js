@@ -216,6 +216,120 @@ class RoomManager {
     return room;
   }
 
+  leaveRoom(socket) {
+    let roomId = socket.roomId;
+    let room = roomId ? this.getRoom(roomId) : null;
+    if (!room) {
+      for (const r of this.rooms.values()) {
+        if (r.players.some(p => p.id === socket.id || (socket.sessionToken && p.sessionToken === socket.sessionToken))) {
+          room = r;
+          roomId = r.id;
+          break;
+        }
+      }
+    }
+
+    if (!room) {
+      delete socket.roomId;
+      delete socket.sessionToken;
+      socket.emit('room_left');
+      return;
+    }
+
+    const playerIndex = room.players.findIndex(p => p.id === socket.id || (socket.sessionToken && p.sessionToken === socket.sessionToken));
+    if (playerIndex === -1) {
+      socket.leave(roomId);
+      delete socket.roomId;
+      delete socket.sessionToken;
+      socket.emit('room_left');
+      return;
+    }
+
+    const leavingPlayer = room.players[playerIndex];
+    if (leavingPlayer.disconnectTimeout) {
+      clearTimeout(leavingPlayer.disconnectTimeout);
+      leavingPlayer.disconnectTimeout = null;
+    }
+
+    // Remove player completely from room
+    room.players.splice(playerIndex, 1);
+    socket.leave(roomId);
+    delete socket.roomId;
+    delete socket.sessionToken;
+
+    // Check if room has any remaining human players
+    const humanPlayers = room.players.filter(p => !p.isBot);
+    if (humanPlayers.length === 0) {
+      this.clearTurnTimer(room);
+      this.rooms.delete(roomId);
+      socket.emit('room_left');
+      return;
+    }
+
+    // If host left, reassign host to the next human player
+    if (leavingPlayer.isHost) {
+      const nextHost = humanPlayers[0] || room.players[0];
+      if (nextHost) {
+        nextHost.isHost = true;
+        room.hostId = nextHost.id;
+      }
+    }
+
+    this.sendRefereeMessage(roomId, `🚪 ${leavingPlayer.avatar} @${leavingPlayer.nickname} đã rời khỏi phòng.`);
+
+    // If game was playing, handle alive check and turn progression
+    if (room.status === 'playing') {
+      const alivePlayers = room.players.filter(p => p.isAlive);
+      if (alivePlayers.length <= 1) {
+        this.clearTurnTimer(room);
+        if (alivePlayers.length === 1) {
+          const winner = alivePlayers[0];
+          winner.score = (winner.score || 0) + 50;
+          winner.roundsWon = (winner.roundsWon || 0) + 1;
+          room.winner = winner;
+          room.status = 'match_ended';
+          const winnerPayload = { id: winner.id, nickname: winner.nickname, avatar: winner.avatar, score: winner.score || 0 };
+          this.io.to(room.id).emit('match_finished', {
+            podium: [{ rank: 1, ...winnerPayload }],
+            totalRounds: room.maxRounds
+          });
+          this.sendRefereeMessage(room.id, `👑 ${winner.avatar} @${winner.nickname} chiến thắng vì đối thủ đã rời phòng!`);
+        } else {
+          room.status = 'waiting';
+        }
+      } else {
+        // Adjust turnIndex because player was spliced out
+        if (playerIndex < room.turnIndex) {
+          room.turnIndex--;
+        } else if (playerIndex === room.turnIndex) {
+          if (room.turnIndex >= room.players.length) {
+            room.turnIndex = 0;
+          }
+          let attempts = 0;
+          while (!room.players[room.turnIndex]?.isAlive && attempts < room.players.length) {
+            room.turnIndex = (room.turnIndex + 1) % room.players.length;
+            attempts++;
+          }
+          const nextPlayer = room.players[room.turnIndex];
+          if (nextPlayer) {
+            const turnPayload = {
+              nickname: nextPlayer.nickname,
+              avatar: nextPlayer.avatar,
+              syllable: room.expectedSyllable,
+              isOpening: false
+            };
+            this.addHistory(room, 'turn_announcement', turnPayload);
+            this.io.to(room.id).emit('turn_announcement', turnPayload);
+            this.startTurnTimer(room);
+          }
+        }
+      }
+    }
+
+    this.broadcastRoomUpdate(room);
+    socket.emit('room_left');
+  }
+
   toggleReady(socket) {
     const room = this.getRoom(socket.roomId);
     if (!room || room.status !== 'waiting') return;

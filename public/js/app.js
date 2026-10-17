@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const roundLeaderboardList = document.getElementById('roundLeaderboardList');
   const btnNextRound = document.getElementById('btnNextRound');
   const btnRoundReturnLobby = document.getElementById('btnRoundReturnLobby');
+  const btnRoundLeaveRoom = document.getElementById('btnRoundLeaveRoom');
 
   // Podium Modal (Top 1, Top 2, Top 3)
   const modalPodium = document.getElementById('modalPodium');
@@ -135,12 +136,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const podiumOtherList = document.getElementById('podiumOtherList');
   const btnPlayAgainMatch = document.getElementById('btnPlayAgainMatch');
   const btnReturnLobby = document.getElementById('btnReturnLobby');
+  const btnPodiumLeaveRoom = document.getElementById('btnPodiumLeaveRoom');
   const btnClosePodium = document.getElementById('btnClosePodium');
 
   // Match Ended Floating Banner
   const matchEndedBanner = document.getElementById('matchEndedBanner');
   const btnBannerPlayAgain = document.getElementById('btnBannerPlayAgain');
   const btnBannerReturnLobby = document.getElementById('btnBannerReturnLobby');
+  const btnBannerLeaveRoom = document.getElementById('btnBannerLeaveRoom');
 
   const modalRules = document.getElementById('modalRules');
   const btnOpenRules = document.getElementById('btnOpenRules');
@@ -249,6 +252,28 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
     }
   }, { passive: false });
+
+  function clearRoomStorage() {
+    try {
+      sessionStorage.removeItem('noitu_session_token');
+      sessionStorage.removeItem('noitu_room_id');
+      localStorage.removeItem('noitu_session_token');
+      localStorage.removeItem('noitu_room_id');
+      localStorage.removeItem('noitu_last_room');
+      if (tabId) {
+        localStorage.removeItem(`noitu_session_${tabId}`);
+        localStorage.removeItem(`noitu_room_${tabId}`);
+      }
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('noitu_session_') || key.startsWith('noitu_room_'))) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (e) {
+      console.error('Error clearing room storage:', e);
+    }
+  }
 
   function syncRoomSession() {
     const savedRoomId = sessionStorage.getItem('noitu_room_id') || localStorage.getItem(`noitu_room_${tabId}`) || localStorage.getItem('noitu_last_room');
@@ -589,16 +614,55 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.emit('toggle_ready');
   });
 
+  function handleLeaveRoom() {
+    window.soundManager.playPop();
+    socket.emit('leave_room');
+    clearRoomStorage();
+    currentRoom = null;
+    mySessionToken = null;
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (modalRoundEnd) modalRoundEnd.classList.add('hidden');
+    if (modalPodium) modalPodium.classList.add('hidden');
+    if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
+    if (modalQrCode) modalQrCode.classList.add('hidden');
+    if (navRoomBadge) navRoomBadge.classList.add('hidden');
+    if (inputRoomCode) inputRoomCode.value = '';
+    if (inputWord) inputWord.value = '';
+    showView('lobby');
+    showToast('Đã rời khỏi phòng', 'info');
+  }
+
   btnLeaveRoom.addEventListener('click', () => {
     if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
-      sessionStorage.removeItem('noitu_session_token');
-      sessionStorage.removeItem('noitu_room_id');
-      localStorage.removeItem('noitu_session_token');
-      localStorage.removeItem('noitu_room_id');
-      currentRoom = null;
-      window.location.href = '/';
+      handleLeaveRoom();
     }
   });
+
+  if (btnRoundLeaveRoom) {
+    btnRoundLeaveRoom.addEventListener('click', () => {
+      if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
+        handleLeaveRoom();
+      }
+    });
+  }
+
+  if (btnPodiumLeaveRoom) {
+    btnPodiumLeaveRoom.addEventListener('click', () => {
+      if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
+        handleLeaveRoom();
+      }
+    });
+  }
+
+  if (btnBannerLeaveRoom) {
+    btnBannerLeaveRoom.addEventListener('click', () => {
+      if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
+        handleLeaveRoom();
+      }
+    });
+  }
 
   // ================= GAMEPLAY ACTIONS =================
   formWordSubmit.addEventListener('submit', (e) => {
@@ -734,15 +798,33 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('noitu_last_room', roomId);
   });
 
+  socket.on('room_left', () => {
+    clearRoomStorage();
+    currentRoom = null;
+    mySessionToken = null;
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (modalRoundEnd) modalRoundEnd.classList.add('hidden');
+    if (modalPodium) modalPodium.classList.add('hidden');
+    if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
+    if (modalQrCode) modalQrCode.classList.add('hidden');
+    if (navRoomBadge) navRoomBadge.classList.add('hidden');
+    if (inputRoomCode) inputRoomCode.value = '';
+    if (inputWord) inputWord.value = '';
+    showView('lobby');
+  });
+
   socket.on('error_message', (msg) => {
     showToast(msg, 'error');
     window.soundManager.playBuzzer();
     if (msg.includes('không tồn tại') || msg.includes('giải tán')) {
-      sessionStorage.removeItem('noitu_session_token');
-      sessionStorage.removeItem('noitu_room_id');
-      localStorage.removeItem(`noitu_session_${tabId}`);
-      localStorage.removeItem(`noitu_room_${tabId}`);
+      clearRoomStorage();
       currentRoom = null;
+      mySessionToken = null;
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
       showView('lobby');
     }
   });

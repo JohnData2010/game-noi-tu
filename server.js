@@ -96,6 +96,15 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Leave room completely
+  socket.on('leave_room', () => {
+    try {
+      roomManager.leaveRoom(socket);
+    } catch (err) {
+      console.error('Error leaving room:', err);
+    }
+  });
+
   // Toggle ready status
   socket.on('toggle_ready', () => {
     roomManager.toggleReady(socket);
