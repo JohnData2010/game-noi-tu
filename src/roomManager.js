@@ -263,6 +263,52 @@ class RoomManager {
     }
   }
 
+  returnToLobby(socket) {
+    const room = this.getRoom(socket.roomId);
+    if (!room) return;
+    if (room.hostId !== socket.id) {
+      socket.emit('error_message', 'Chỉ chủ phòng mới có quyền đưa phòng về sảnh chờ!');
+      return;
+    }
+
+    this.clearTurnTimer(room);
+    room.status = 'waiting';
+    room.roundNumber = 0;
+    room.podium = null;
+    room.winner = null;
+    room.lastWord = null;
+    room.expectedSyllable = null;
+    room.usedWords.clear();
+    room.eliminatedOrder = [];
+    room.turnCount = 0;
+    room.turnDuration = room.initialTurnDuration !== undefined ? room.initialTurnDuration : 0;
+    room.isTimerPaused = false;
+
+    // Reset player scores & ready states
+    for (const p of room.players) {
+      p.isAlive = true;
+      p.score = 0;
+      p.wordsCount = 0;
+      p.roundsWon = 0;
+      p.hintsRemaining = room.allowHints !== false ? 1 : 0;
+      p.isReady = p.isHost || p.isBot;
+    }
+
+    this.sendRefereeMessage(room.id, '🔄 Đã quay về phòng chờ. Bạn có thể sẵn sàng và bắt đầu lại ván mới!');
+    this.broadcastRoomUpdate(room);
+  }
+
+  restartGame(socket) {
+    const room = this.getRoom(socket.roomId);
+    if (!room) return;
+    if (room.hostId !== socket.id) {
+      socket.emit('error_message', 'Chỉ chủ phòng mới có quyền bắt đầu lại ván mới!');
+      return;
+    }
+    room.status = 'match_ended'; // Triggers full score & round reset in startGame
+    this.startGame(socket);
+  }
+
   startGame(socket) {
     const room = this.getRoom(socket.roomId);
     if (!room) return;

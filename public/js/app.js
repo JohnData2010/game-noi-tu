@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const roundEndSubtitle = document.getElementById('roundEndSubtitle');
   const roundLeaderboardList = document.getElementById('roundLeaderboardList');
   const btnNextRound = document.getElementById('btnNextRound');
+  const btnRoundReturnLobby = document.getElementById('btnRoundReturnLobby');
 
   // Podium Modal (Top 1, Top 2, Top 3)
   const modalPodium = document.getElementById('modalPodium');
@@ -133,7 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const podium3Score = document.getElementById('podium3Score');
   const podiumOtherList = document.getElementById('podiumOtherList');
   const btnPlayAgainMatch = document.getElementById('btnPlayAgainMatch');
+  const btnReturnLobby = document.getElementById('btnReturnLobby');
   const btnClosePodium = document.getElementById('btnClosePodium');
+
+  // Match Ended Floating Banner
+  const matchEndedBanner = document.getElementById('matchEndedBanner');
+  const btnBannerPlayAgain = document.getElementById('btnBannerPlayAgain');
+  const btnBannerReturnLobby = document.getElementById('btnBannerReturnLobby');
 
   const modalRules = document.getElementById('modalRules');
   const btnOpenRules = document.getElementById('btnOpenRules');
@@ -648,15 +655,69 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.emit('start_game');
   });
 
+  if (btnRoundReturnLobby) {
+    btnRoundReturnLobby.addEventListener('click', () => {
+      modalRoundEnd.classList.add('hidden');
+      window.soundManager.playPop();
+      socket.emit('return_to_lobby');
+    });
+  }
+
   btnPlayAgainMatch.addEventListener('click', () => {
-    modalPodium.classList.add('hidden');
+    const me = currentRoom ? currentRoom.players.find(p => p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken)) : null;
+    const amIHost = me ? me.isHost : false;
     window.soundManager.playPop();
-    socket.emit('start_game');
+    if (amIHost) {
+      modalPodium.classList.add('hidden');
+      if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
+      socket.emit('restart_game');
+    } else {
+      socket.emit('request_rematch');
+      showToast('Đã gửi đề nghị chơi lại tới chủ phòng!', 'info');
+      btnPlayAgainMatch.textContent = 'Đã gửi đề nghị...';
+      btnPlayAgainMatch.disabled = true;
+    }
   });
+
+  if (btnReturnLobby) {
+    btnReturnLobby.addEventListener('click', () => {
+      modalPodium.classList.add('hidden');
+      if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
+      window.soundManager.playPop();
+      socket.emit('return_to_lobby');
+    });
+  }
 
   btnClosePodium.addEventListener('click', () => {
     modalPodium.classList.add('hidden');
+    if (matchEndedBanner && currentRoom?.status === 'match_ended') {
+      matchEndedBanner.classList.remove('hidden');
+      matchEndedBanner.classList.add('flex');
+    }
   });
+
+  if (btnBannerPlayAgain) {
+    btnBannerPlayAgain.addEventListener('click', () => {
+      const me = currentRoom ? currentRoom.players.find(p => p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken)) : null;
+      const amIHost = me ? me.isHost : false;
+      window.soundManager.playPop();
+      if (amIHost) {
+        if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
+        socket.emit('restart_game');
+      } else {
+        socket.emit('request_rematch');
+        showToast('Đã gửi đề nghị chơi lại tới chủ phòng!', 'info');
+      }
+    });
+  }
+
+  if (btnBannerReturnLobby) {
+    btnBannerReturnLobby.addEventListener('click', () => {
+      if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
+      window.soundManager.playPop();
+      socket.emit('return_to_lobby');
+    });
+  }
 
   // ================= SOCKET EVENT LISTENERS =================
   socket.on('connect', () => {
@@ -722,6 +783,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // View Switching
     if (room.status === 'waiting') {
       showView('waiting');
+      if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
+      modalRoundEnd.classList.add('hidden');
+      modalPodium.classList.add('hidden');
       renderWaitingPlayers(room.players, amIHost);
 
       if (amIHost) {
@@ -740,8 +804,23 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (room.status === 'playing' || room.status === 'round_ended' || room.status === 'match_ended' || room.status === 'ended') {
       showView('game');
       if (room.status === 'playing') {
+        if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
         modalRoundEnd.classList.add('hidden');
         modalPodium.classList.add('hidden');
+      } else if (room.status === 'match_ended') {
+        if (matchEndedBanner) {
+          if (modalPodium.classList.contains('hidden')) {
+            matchEndedBanner.classList.remove('hidden');
+            matchEndedBanner.classList.add('flex');
+          }
+          if (btnBannerPlayAgain) {
+            btnBannerPlayAgain.textContent = amIHost ? '🎮 Chơi lại' : '🙋 Muốn chơi lại';
+          }
+          if (btnBannerReturnLobby) {
+            if (amIHost) btnBannerReturnLobby.classList.remove('hidden');
+            else btnBannerReturnLobby.classList.add('hidden');
+          }
+        }
       }
       renderGameBoard(room, me);
     }
@@ -1141,10 +1220,12 @@ document.addEventListener('DOMContentLoaded', () => {
       btnNextRound.disabled = false;
       btnNextRound.classList.remove('opacity-50', 'cursor-not-allowed');
       btnNextRound.textContent = `Vào hiệp ${currentRound + 1}`;
+      if (btnRoundReturnLobby) btnRoundReturnLobby.classList.remove('hidden');
     } else {
       btnNextRound.disabled = true;
       btnNextRound.classList.add('opacity-50', 'cursor-not-allowed');
       btnNextRound.textContent = `Chờ chủ phòng vào hiệp ${currentRound + 1}...`;
+      if (btnRoundReturnLobby) btnRoundReturnLobby.classList.add('hidden');
     }
 
     modalRoundEnd.classList.remove('hidden');
@@ -1222,11 +1303,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (amIHost) {
       btnPlayAgainMatch.disabled = false;
       btnPlayAgainMatch.classList.remove('opacity-50', 'cursor-not-allowed');
-      btnPlayAgainMatch.textContent = 'Chơi ván mới';
+      btnPlayAgainMatch.innerHTML = '<span>🎮 Chơi ván mới ngay</span>';
+      if (btnReturnLobby) btnReturnLobby.classList.remove('hidden');
     } else {
-      btnPlayAgainMatch.disabled = true;
-      btnPlayAgainMatch.classList.add('opacity-50', 'cursor-not-allowed');
-      btnPlayAgainMatch.textContent = 'Chờ chủ phòng đấu lại...';
+      btnPlayAgainMatch.disabled = false;
+      btnPlayAgainMatch.classList.remove('opacity-50', 'cursor-not-allowed');
+      btnPlayAgainMatch.innerHTML = '<span>🙋 Đề nghị chơi lại ván mới</span>';
+      if (btnReturnLobby) btnReturnLobby.classList.add('hidden');
     }
 
     modalPodium.classList.remove('hidden');

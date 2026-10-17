@@ -116,6 +116,28 @@ io.on('connection', (socket) => {
     roomManager.startGame(socket);
   });
 
+  // Restart match from beginning
+  socket.on('restart_game', () => {
+    roomManager.restartGame(socket);
+  });
+
+  // Return to waiting lobby without leaving room
+  socket.on('return_to_lobby', () => {
+    roomManager.returnToLobby(socket);
+  });
+
+  // Request rematch notification
+  socket.on('request_rematch', () => {
+    const roomId = socket.roomId;
+    if (!roomId) return;
+    const room = roomManager.getRoom(roomId);
+    if (!room) return;
+    const player = room.players.find(p => p.id === socket.id);
+    if (player) {
+      roomManager.sendRefereeMessage(roomId, `🙋 @${player.nickname} muốn chơi lại ván mới!`);
+    }
+  });
+
   // Submit word during game
   socket.on('submit_word', (data) => {
     const word = typeof data === 'string' ? data : data?.word;

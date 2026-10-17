@@ -11,7 +11,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="/css/style.css?v=2.4" />
+  <link rel="stylesheet" href="/css/style.css?v=2.5" />
   <script>
     tailwind.config = {
       theme: {
@@ -296,6 +296,22 @@
       <!-- Messenger Chat Feed -->
       <div id="chatFeed" class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-3.5 space-y-2 bg-slate-50/80 scroll-smooth"></div>
 
+      <!-- Match Ended Floating Action Banner -->
+      <div id="matchEndedBanner" class="hidden bg-amber-50 border-t border-b border-amber-200 px-3 py-2 flex items-center justify-between gap-2 z-20 flex-shrink-0">
+        <div class="flex items-center space-x-1.5 min-w-0">
+          <span class="text-base flex-shrink-0">🏆</span>
+          <span class="text-xs sm:text-sm font-bold text-amber-900 truncate">Ván đấu đã kết thúc!</span>
+        </div>
+        <div class="flex items-center space-x-1.5 flex-shrink-0">
+          <button id="btnBannerPlayAgain" type="button" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition active:scale-95">
+            🎮 Chơi lại
+          </button>
+          <button id="btnBannerReturnLobby" type="button" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs sm:text-sm transition active:scale-95">
+            🏠 Phòng chờ
+          </button>
+        </div>
+      </div>
+
       <!-- Messenger Input Bar -->
       <div class="p-2 sm:p-2.5 bg-white border-t border-slate-200 flex-shrink-0 mobile-safe-bottom">
         <form id="formWordSubmit" class="flex items-center space-x-1.5 sm:space-x-2" autocomplete="off">
@@ -357,9 +373,12 @@
 
       <div class="bg-slate-50 rounded-xl p-2.5 space-y-1.5 border border-slate-200/80 max-h-48 overflow-y-auto" id="roundLeaderboardList"></div>
 
-      <div class="pt-0.5">
-        <button id="btnNextRound" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xs transition active:scale-98">
-          Vào hiệp tiếp theo
+      <div class="pt-0.5 space-y-1.5">
+        <button id="btnNextRound" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xs transition active:scale-98 flex items-center justify-center space-x-1.5">
+          <span>Tiếp tục hiệp tiếp theo</span>
+        </button>
+        <button id="btnRoundReturnLobby" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition active:scale-98 flex items-center justify-center space-x-1.5">
+          <span>🏠 Về phòng chờ (Chơi lại từ đầu)</span>
         </button>
       </div>
     </div>
@@ -370,10 +389,14 @@
     <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-xl space-y-3.5">
       
       <div>
-        <h2 class="text-base sm:text-lg font-bold text-slate-900">
-          Bảng xếp hạng chung cuộc
+        <div class="inline-flex items-center space-x-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold mb-1.5">
+          <span>🏆</span>
+          <span>Hết ván đấu</span>
+        </div>
+        <h2 class="text-base sm:text-lg font-extrabold text-slate-900">
+          Bạn có muốn chơi tiếp không?
         </h2>
-        <p class="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium" id="podiumSubtitle">Chúc mừng các người chơi xuất sắc nhất!</p>
+        <p class="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium" id="podiumSubtitle">Bảng xếp hạng chung cuộc các người chơi</p>
       </div>
 
       <!-- 3D OLYMPIC PODIUM -->
@@ -415,12 +438,15 @@
       <!-- Other Ranks List -->
       <div id="podiumOtherList" class="space-y-1.5 text-xs sm:text-sm text-left max-h-32 overflow-y-auto pr-1"></div>
 
-      <div class="pt-0.5 space-y-1.5">
-        <button id="btnPlayAgainMatch" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xs transition active:scale-98">
-          Chơi ván mới
+      <div class="pt-1 space-y-1.5">
+        <button id="btnPlayAgainMatch" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xs transition active:scale-98 flex items-center justify-center space-x-1.5">
+          <span>🎮 Chơi ván mới ngay</span>
         </button>
-        <button id="btnClosePodium" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition active:scale-98">
-          Đóng
+        <button id="btnReturnLobby" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm shadow-xs transition active:scale-98 flex items-center justify-center space-x-1.5">
+          <span>🏠 Về phòng chờ (Đổi số hiệp/giờ)</span>
+        </button>
+        <button id="btnClosePodium" class="w-full py-1 text-slate-400 hover:text-slate-600 text-xs font-medium transition">
+          Xem lại bàn cờ
         </button>
       </div>
 
@@ -502,7 +528,7 @@
 
   <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/sound.js?v=2.4"></script>
-  <script src="/js/app.js?v=2.4"></script>
+  <script src="/js/sound.js?v=2.5"></script>
+  <script src="/js/app.js?v=2.5"></script>
 </body>
 </html>
