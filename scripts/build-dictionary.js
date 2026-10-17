@@ -4,7 +4,7 @@ const https = require('https');
 
 function fetchUrl(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    https.get(url, { rejectUnauthorized: false }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         return fetchUrl(res.headers.location).then(resolve).catch(reject);
       }
@@ -22,206 +22,116 @@ function isValidSyllable(s) {
   return VIETNAMESE_SYLLABLE_REGEX.test(s);
 }
 
-// Comprehensive real-life, daily Vietnamese verbs, nouns, modern slang, foods, internet & lifestyle terms
+// ==============================================================================
+// COMPREHENSIVE CURATED DICTIONARY OF MODERN, DAILY, GEN Z & COLLOQUIAL VIETNAMESE
+// ==============================================================================
 const MODERN_AND_DAILY_WORDS = [
-  // Trồng & Nông nghiệp & Cây cối
-  'trồng cây', 'trồng hoa', 'trồng rau', 'trồng lúa', 'trồng rừng', 'trồng nấm', 'trồng ngô', 'trồng khoai',
-  'trồng cỏ', 'trồng sen', 'trồng dâu', 'trồng dưa', 'trồng sắn', 'trồng kiểng', 'trồng chè', 'trồng đậu',
-  'trồng trọt', 'trồng cấy', 'trồng chuối', 'trồng ớt', 'trồng tiêu', 'trồng mía', 'trồng bông', 'trồng xoài',
-  'trồng mít', 'trồng ổi', 'trồng cà', 'trồng đỗ', 'trồng tỉa', 'trồng trỉa', 'trồng xen', 'trồng trái',
-  'trồng cải', 'trồng tỏi', 'trồng hành', 'trồng gừng', 'trồng nghệ', 'trồng sả', 'trồng bí', 'trồng bầu',
-  'trồng mướp', 'trồng cam', 'trồng chanh', 'trồng bưởi', 'trồng quất', 'trồng quýt', 'trồng táo', 'trồng mận',
-  'trồng đào', 'trồng lê', 'trồng nhãn', 'trồng vải', 'trồng dừa', 'trồng cau', 'trồng thông', 'trồng keo',
-  'trồng tre', 'trồng trúc', 'trồng măng',
+  // --- 1. THỜI TRANG, TRANG PHỤC, LÀM ĐẸP & DIỆN ĐỒ (FASHION & GROOMING) ---
+  'diện đồ', 'diện váy', 'diện áo', 'diện quần', 'diện cánh', 'diện giày', 'diện guốc', 'diện xịn', 'diện đẹp', 'diện sang', 'diện bảnh',
+  'diện mạo', 'diện kiến', 'diện chẩn', 'diện rộng', 'diện hẹp', 'diện tích', 'diện đàm', 'diện mục', 'diện phẳng', 'diện thể', 'diện mộc', 'diện tiền',
+  'lên đồ', 'phối đồ', 'thử đồ', 'thay đồ', 'sắm đồ', 'mua đồ', 'bán đồ', 'dọn đồ', 'xếp đồ', 'giặt đồ', 'phơi đồ', 'ủi đồ', 'vá đồ',
+  'gửi đồ', 'lấy đồ', 'chở đồ', 'vác đồ', 'khuân đồ', 'mất đồ', 'quên đồ', 'trộm đồ', 'cất đồ', 'thu đồ', 'gói đồ', 'soạn đồ',
+  'đồ bộ', 'đồ ngủ', 'đồ bơi', 'đồ lót', 'đồ jean', 'đồ vest', 'đồ da', 'đồ hiệu', 'đồ si', 'đồ cũ', 'đồ mới', 'đồ đôi', 'đồ nhóm',
+  'đồ gym', 'đồ cưới', 'đồ tết', 'đồ tiệc', 'đồ xinh', 'đồ đẹp', 'đồ xịn', 'đồ sang', 'đồ rách', 'đồ vá', 'đồ ấm', 'đồ mát',
+  'đồ đạc', 'đồ dùng', 'đồ nghề', 'đồ chơi', 'đồ ăn', 'đồ uống', 'đồ ngọt', 'đồ mặn', 'đồ chay', 'đồ hộp', 'đồ khô', 'đồ tươi',
+  'đồ gia', 'đồ sứ', 'đồ gốm', 'đồ gỗ', 'đồ sắt', 'đồ nhôm', 'đồ nhựa', 'đồ đồng', 'đồ bạc', 'đồ vàng', 'đồ nướng', 'đồ xào', 'đồ luộc',
+  'mặc đồ', 'mặc áo', 'mặc quần', 'mặc váy', 'mặc đầm', 'mặc yếm', 'mặc ấm', 'mặc đẹp', 'mặc kệ', 'mặc định', 'mặc cả', 'mặc cảm',
+  'áo thun', 'áo phông', 'áo sơ', 'sơ mi', 'áo khoác', 'áo len', 'áo dài', 'áo ba', 'ba lỗ', 'áo phao', 'áo dạ', 'áo croptop', 'áo blazer',
+  'áo hoodie', 'áo polo', 'áo nỉ', 'áo mưa', 'áo vest', 'áo choàng', 'áo vét', 'áo yếm', 'áo tấc', 'áo cánh', 'áo lót', 'áo quây',
+  'áo hai', 'hai dây', 'áo bó', 'áo rộng', 'áo lửng', 'áo giáp', 'áo bông', 'áo ngực',
+  'quần jean', 'quần bò', 'quần âu', 'quần tây', 'quần sooc', 'quần short', 'quần đùi', 'quần lót', 'quần ống', 'ống loe', 'ống rộng',
+  'ống suông', 'quần suông', 'quần thun', 'quần dù', 'quần vải', 'quần lửng', 'quần ngố', 'quần bó', 'quần baggy', 'quần yếm',
+  'quần cạp', 'cạp cao', 'quần dài', 'quần ngắn', 'quần tất', 'quần áo', 'quần chúng', 'quần đảo',
+  'chân váy', 'váy xòe', 'váy ôm', 'váy suông', 'váy cưới', 'váy ngắn', 'váy dài', 'váy hoa', 'váy dạ', 'váy lụa', 'váy voan', 'váy ren',
+  'váy midi', 'váy maxi', 'váy chữ', 'chữ a', 'váy tầng', 'váy bầu', 'váy ngủ', 'váy đầm', 'váy yếm', 'váy xếp', 'xếp ly',
+  'đầm xòe', 'đầm ôm', 'đầm dạ', 'dạ hội', 'đầm suông', 'đầm cưới', 'đầm ren', 'đầm ngắn', 'đầm dài', 'đầm bầu', 'đầm ngủ',
+  'giày thể', 'thể thao', 'giày bốt', 'giày lười', 'giày cao', 'cao gót', 'giày bệt', 'giày vải', 'giày da', 'giày tây', 'giày sneaker',
+  'giày búp', 'búp bê', 'giày sục', 'giày lội', 'dép lào', 'dép lê', 'dép kẹp', 'dép bệt', 'dép quai', 'quai hậu', 'quai ngang',
+  'quai chéo', 'dép tông', 'dép bánh', 'bánh mì', 'dép tổ', 'tổ ong', 'dép xốp', 'dép nhựa',
+  'túi xách', 'túi tote', 'túi đeo', 'đeo chéo', 'ba lô', 'ví tiền', 'bóp tiền', 'thắt lưng', 'dây nịt', 'kính râm', 'kính mát', 'kính cận',
+  'kính lão', 'kính áp', 'áp tròng', 'đồng hồ', 'khuyên tai', 'hoa tai', 'bông tai', 'vòng tay', 'vòng cổ', 'dây chuyền', 'nhẫn cưới',
+  'nhẫn kim', 'kim cương', 'vàng bạc', 'ngọc trai', 'ngọc bích', 'cài áo', 'kẹp tóc', 'băng đô', 'chun buộc', 'dây chun', 'nơ tóc', 'bờm tóc',
+  'son môi', 'son lì', 'son bóng', 'son kem', 'son dưỡng', 'phấn má', 'phấn nền', 'kem lót', 'chuốt mi', 'kẻ mắt', 'chân mày', 'phun mày',
+  'xăm môi', 'uốn mi', 'nối mi', 'sơn móng', 'làm móng', 'tẩy trang', 'nước hoa', 'sữa tắm', 'dầu gội', 'dầu xả', 'kem chống', 'chống nắng',
+  'mặt nạ', 'serum', 'dưỡng ẩm', 'kem dưỡng', 'tẩy da', 'da chết', 'toner', 'nước thần', 'làm đẹp', 'thẩm mỹ', 'nâng mũi', 'nhấn mí',
 
-  // Cây cối & Bộ phận của cây
-  'cây xanh', 'cây cối', 'cây cảnh', 'cây hoa', 'cây cỏ', 'cây rừng', 'cây lúa', 'cây ngô', 'cây mía',
-  'cây đa', 'cây đề', 'cây bàng', 'cây phượng', 'cây xoan', 'cây thông', 'cây tre', 'cây trúc', 'cây nứa',
-  'cây cau', 'cây dừa', 'cây mít', 'cây xoài', 'cây ổi', 'cây bưởi', 'cây cam', 'cây chanh', 'cây quất',
-  'cây đào', 'cây mai', 'cây sen', 'cây súng', 'cây thuốc', 'cây chè', 'cây cầu', 'cây xăng', 'cây số',
-  'cây bút', 'cây viết', 'cây kim', 'cây đàn', 'cây gậy', 'cây cọc', 'cây rơm', 'cây củi', 'cây gỗ',
-  'cây nến', 'cây kiểng', 'cây chổi', 'cây kéo', 'cây dù', 'cây quạt', 'cây nêu', 'cây rạ', 'cây gai',
-  'cây giống', 'cây nhà', 'cây vườn', 'cây trái', 'cây lá', 'cây cành', 'cây ăn', 'cây bụi', 'cây leo',
-  'cây mầm', 'cây con', 'cây chuối', 'cây quýt', 'cây bơ', 'cây na', 'cây điều', 'cây tiêu', 'cây đay',
-  'cây ngót', 'cây râm', 'cây sấu', 'cây sung', 'cây vải', 'cây nhãn', 'cây dâu', 'cây khế', 'cây roi',
-  'cây mận', 'cây vối', 'cây gấc', 'cây me', 'cây mọc', 'cây cao', 'cây ngã', 'cây đổ', 'cây khô', 'cây tươi',
-  'cành cây', 'cành hoa', 'cành lá', 'cành chiết', 'cành ghép', 'cành đào', 'cành mai', 'cành tre',
-  'lá cây', 'lá xanh', 'lá vàng', 'lá rụng', 'lá úa', 'lá non', 'lá sen', 'lá chuối', 'lá dong',
-  'lá lốt', 'lá chanh', 'lá trầu', 'lá cỏ', 'lá dừa', 'lá dứa', 'lá tía', 'lá mía', 'lá tre',
-  'hoa hồng', 'hoa mai', 'hoa đào', 'hoa cúc', 'hoa sen', 'hoa súng', 'hoa lan', 'hoa huệ', 'hoa ly',
-  'hoa giấy', 'hoa phượng', 'hoa bưởi', 'hoa nhài', 'hoa quỳnh', 'hoa sưa', 'hoa sữa', 'hoa gạo', 'hoa dâm',
-  'hoa ban', 'hoa sáp', 'hoa tươi', 'hoa khô', 'hoa giả', 'hoa cưới', 'hoa chúc', 'hoa viếng',
-  'quả ngọt', 'quả chua', 'quả chín', 'quả non', 'quả xanh', 'quả bóng', 'quả chuối', 'quả cam', 'quả bưởi',
-  'quả xoài', 'quả mít', 'quả táo', 'quả lê', 'quả dưa', 'quả bí', 'quả bầu', 'quả mướp', 'quả cà',
-  'quả trứng', 'quả cầu', 'quả tim', 'quả đồi', 'quả núi', 'quả chanh', 'quả quất', 'quả na', 'quả dừa',
-  'trái cây', 'trái ngọt', 'trái ngon', 'trái mùa', 'trái chuối', 'trái cam', 'trái dừa', 'trái ớt',
-  'trái tim', 'trái banh', 'trái đất', 'trái ngược', 'trái chiều', 'trái phép', 'trái luật', 'trái tính', 'trái nết',
+  // --- 2. TỪ VỰNG GEN Z, MẠNG XÃ HỘI, INTERNET, GAMING & TRENDING ---
+  'bắt trend', 'đu trend', 'chạy trend', 'tạo trend', 'hết trend', 'trend mới', 'trend cũ', 'trend xịn', 'trend hot', 'bài trend',
+  'check var', 'var nhau', 'var chạm', 'bị var', 'pha var',
+  'flex đồ', 'flex tiền', 'flex xe', 'flex nhà', 'flex bài', 'flex điểm', 'flex nhẹ', 'flex dáng', 'flex khéo',
+  'cháy phố', 'cháy máy', 'cháy ví', 'cháy túi', 'cháy vé', 'cháy khét', 'khét lẹt', 'cháy quá', 'cháy hết',
+  'vô tri', 'hết cứu', 'sập nguồn', 'cạn lời', 'đứng hình', 'bật ngửa', 'ngơ ngác', 'ngỡ ngàng', 'chết lặng', 'câm nín', 'hóa đá',
+  'cà khịa', 'cà chớn', 'đá đểu', 'đá xéo', 'xỏ xiên', 'mỉa mai', 'châm biếm', 'nói móc', 'chọc ngoáy',
+  'ô dề', 'ố dề', 'ra dẻ', 'ra vẻ', 'làm màu', 'làm nét', 'tạo nét', 'làm dáng', 'điệu đà', 'bánh bèo',
+  'keo lỳ', 'keo lì', 'mãi mận', 'mận keo', 'mãi đỉnh', 'đỉnh nóc', 'kịch trần', 'bay phới', 'đỉnh chóp', 'đỉnh cao', 'quá đỉnh',
+  'slay quá', 'slay vãi', 'slay chúa', 'quá slay', 'cực slay',
+  'bóc phốt', 'hóng phốt', 'hóng biến', 'nổ biến', 'hít drama', 'dính phốt', 'dính chưởng', 'phốt to', 'phốt căng', 'tẩy chay',
+  'chữa lành', 'chữa rách', 'tổn thương', 'thao túng', 'tâm lý', 'chấp niệm', 'sầu muộn', 'suy đét', 'suy sụp', 'overthinking',
+  'cưng xỉu', 'xỉu ngang', 'xỉu up', 'xỉu down', 'mê xỉu', 'đẹp xỉu', 'chill chill', 'chill phết', 'quá đã', 'đã cái',
+  'simp chúa', 'simp lỏ', 'lỏ vãi', 'lỏ quá', 'ảo ma', 'ảo tưởng', 'ảo diệu', 'cay cú', 'ấm ức', 'tức tối',
+  'trà xanh', 'tiểu tam', 'chính thất', 'cờ đỏ', 'cờ xanh', 'trap boy', 'trap girl', 'đào mỏ', 'lừa tình', 'bắt cá',
+  'gánh team', 'tạ team', 'bóp team', 'còng lưng', 'out trình', 'tay to', 'tay mơ', 'lên trình', 'xuống trình', 'chấp hết',
+  'lật kèo', 'quay xe', 'bẻ lái', 'cua gắt', 'lạng lách', 'đánh võng', 'văng cua',
+  'lụm lúa', 'lượm tiền', 'bào tiền', 'bào ví', 'rỗng ví', 'viêm màng', 'màng túi', 'hết tiền', 'kẹt tiền', 'túng tiền',
+  'đu idol', 'đu concert', 'đu show', 'săn vé', 'săn sale', 'chốt đơn', 'nổ đơn', 'bão đơn', 'bùng hàng', 'boom hàng', 'huỷ đơn', 'hoàn đơn',
+  'ting ting', 'quét mã', 'quét qr', 'bắn tiền', 'chuyển khoản', 'nạp ví', 'quẹt thẻ', 'chạm thẻ', 'sao kê',
+  'sống ảo', 'quay tóp', 'tóp tóp', 'lướt phây', 'lướt tóp', 'cày view', 'cày phim', 'thả tim', 'thả like', 'đăng bài', 'đăng story',
+  'livestream', 'chốt deal', 'bán hàng', 'ăn gậy', 'bay kênh', 'bay màu', 'khóa nick', 'report kênh',
+  'nạp game', 'mở rương', 'quay hòm', 'đập đồ', 'ép đồ', 'leo rank', 'tụt rank', 'kéo rank', 'ghép trận', 'combat tổng', 'ăn mạng',
+  'mỏ hỗn', 'nết na', 'cơm chó', 'phát cẩu', 'cẩu lương', 'thả thính', 'dính thính', 'bật đèn', 'nóc nhà', 'sợ vợ', 'đội vợ',
+  'rich kid', 'soái ca', 'mỹ nam', 'mỹ nữ', 'tổng tài', 'ngầu đét', 'ngầu lòi', 'xịn sò', 'chanh sả', 'sang chảnh',
+  'xin vía', 'nhả vía', 'trộm vía', 'vía lành', 'vía may', 'bói bài', 'thần số', 'bão like', 'triệu view', 'độc lạ',
+  'tấu hài', 'cây hài', 'chúa hề', 'cười bò', 'cười xỉu', 'cười ẻ', 'đập hộp', 'khui hộp', 'khui quà',
+  'đu đỉnh', 'bắt đáy', 'cắt lỗ', 'chốt lời', 'học bá', 'thủ khoa', 'ngủ nướng', 'ngái ngủ', 'ngủ kỹ',
+  'ghiền quá', 'cuốn quá', 'ngon xỉu', 'bánh cuốn', 'chất lượng', 'uy tín', 'chuẩn đét', 'đúng điệu', 'hết nước', 'nước chấm', 'mười điểm',
 
-  // Hành động với thiên nhiên, vườn tược
-  'tưới cây', 'tưới hoa', 'tưới rau', 'tưới nước', 'tưới tiêu', 'tưới gốc', 'tưới nhỏ', 'tưới phun',
-  'chăm cây', 'chăm hoa', 'chăm sóc', 'chăm bón', 'chăm nuôi', 'chăm lo', 'chăm chỉ', 'chăm học', 'chăm làm',
-  'chặt cây', 'chặt cành', 'chặt củi', 'chặt gỗ', 'chặt chém', 'chặt khúc', 'chặt đứt',
-  'tỉa cây', 'tỉa cành', 'tỉa lá', 'tỉa hoa', 'tỉa tót', 'tỉa lông', 'tỉa râu', 'tỉa bớt',
-  'chiết cành', 'chiết cây', 'ghép cành', 'ghép cây', 'ghép đôi', 'ghép hình', 'ghép ảnh', 'ghép chữ',
-  'nhổ cỏ', 'nhổ lông', 'nhổ răng', 'nhổ râu', 'nhổ neo', 'nhổ cọc', 'nhổ rễ', 'nhổ cây',
-  'bón phân', 'bón thúc', 'bón lót', 'bón cây', 'bón cơm', 'bón cháo',
-  'leo cây', 'leo núi', 'leo dốc', 'leo thang', 'leo rào', 'leo trèo',
-  'trèo cây', 'trèo đèo', 'trèo tường', 'trèo rào', 'trèo cao',
-  'hái hoa', 'hái quả', 'hái lá', 'hái chè', 'hái nấm', 'hái lượm', 'hái sen', 'hái dừa', 'hái lộc',
-  'nuôi cá', 'nuôi tôm', 'nuôi cua', 'nuôi ốc', 'nuôi gà', 'nuôi vịt', 'nuôi heo', 'nuôi lợn',
-  'nuôi bò', 'nuôi dê', 'nuôi cừu', 'nuôi chó', 'nuôi mèo', 'nuôi chim', 'nuôi ong', 'nuôi tằm',
-  'nuôi dạy', 'nuôi nấng', 'nuôi sống', 'nuôi dưỡng', 'nuôi con', 'nuôi thú',
-  'bắt sâu', 'bắt bướm', 'bắt cá', 'bắt tôm', 'bắt cua', 'bắt ốc', 'bắt chuột', 'bắt chim',
-  'bắt bóng', 'bắt đầu', 'bắt nhịp', 'bắt chước', 'bắt bài', 'bắt trend', 'bắt đáy', 'bắt sóng',
-  'bắt nạt', 'bắt trộm', 'bắt đền', 'bắt tay', 'bắt chuyện', 'bắt gặp', 'bắt giam',
-  'cắt tỉa', 'cắt cỏ', 'cắt tóc', 'cắt may', 'cắt dán', 'cắt nghĩa', 'cắt giảm', 'cắt lỗ',
-  'cắt đứt', 'cắt ngang', 'cắt cơn', 'cắt thuốc', 'cắt bánh', 'cắt giấy',
+  // --- 3. ẨM THỰC, MÓN ĂN, ĐỒ UỐNG, TRÀ SỮA & ĂN VẶT ---
+  'cà phê', 'phê đen', 'phê sữa', 'phê muối', 'phê trứng', 'phê phin', 'đen đá', 'nâu đá', 'bạc xỉu', 'pha phin', 'pha máy',
+  'trà sữa', 'trà đào', 'trà chanh', 'trà tắc', 'trà quất', 'trà dâu', 'trà vải', 'trà sen', 'trà măng', 'măng cụt', 'trà mãng', 'mãng cầu',
+  'trà ổi', 'ổi hồng', 'trà xoài', 'trà táo', 'trà xanh', 'trà đen', 'trà ô', 'ô long', 'trà lài', 'trà nhài', 'hồng trà', 'bạch trà',
+  'lục trà', 'matcha', 'trân châu', 'đường đen', 'thạch dừa', 'thạch đen', 'thạch phô', 'phô mai', 'kem cheese', 'kem mặn', 'kem trứng',
+  'pudding', 'khúc bạch', 'sương sáo', 'cốt dừa', 'sữa hạt', 'sữa tươi', 'sữa bắp', 'sữa đậu', 'đậu nành',
+  'phở bò', 'phở gà', 'phở tái', 'phở nạm', 'phở gầu', 'phở sốt', 'sốt vang', 'phở xào', 'phở cuốn', 'phở trộn',
+  'bún bò', 'bún chả', 'bún đậu', 'mắm tôm', 'mắm nêm', 'bún riêu', 'bún ốc', 'bún cá', 'bún thang', 'bún sườn', 'bún mọc',
+  'bún mắm', 'bún thịt', 'thịt nướng', 'hủ tiếu', 'bánh canh', 'canh cua', 'canh ghẹ', 'mì quảng', 'mì tôm', 'mì xào', 'mì cay', 'mì trộn', 'mì ý',
+  'cơm tấm', 'cơm sườn', 'cơm gà', 'cơm chiên', 'cơm rang', 'cơm niêu', 'cơm lam', 'cơm nắm', 'cơm cháy', 'cơm hộp',
+  'xôi xéo', 'xôi gà', 'xôi khúc', 'xôi gấc', 'xôi vò', 'xôi lạc', 'xôi đỗ', 'xôi ngô', 'xôi mặn',
+  'bánh mì', 'bánh bao', 'bánh cuốn', 'bánh ướt', 'bánh xèo', 'bánh khọt', 'bánh bèo', 'bánh bột', 'bột lọc', 'bánh giò', 'bánh đúc',
+  'bánh chưng', 'bánh tét', 'bánh tráng', 'tráng trộn', 'tráng nướng', 'tráng cuộn', 'tráng bơ', 'bánh tiêu', 'bánh rán', 'bánh gối',
+  'bánh su', 'su kem', 'bông lan', 'trứng muối', 'bánh quy', 'bánh kem', 'bánh sinh', 'sinh nhật', 'bánh pía', 'bánh đậu', 'đậu xanh', 'bánh cốm',
+  'nem chua', 'nem nướng', 'nem lụi', 'chả lụa', 'chả giò', 'chả ram', 'chả quế', 'chả cá', 'chả mực', 'chả bò', 'dồi sụn', 'lạp xưởng',
+  'xúc xích', 'chân gà', 'sả tắc', 'rút xương', 'tai heo', 'da heo', 'heo quay', 'vịt quay', 'gà luộc', 'gà ủ', 'ủ muối', 'gà rán',
+  'bò né', 'bò kho', 'bò bít', 'bít tết', 'lẩu thái', 'lẩu bò', 'lẩu dê', 'lẩu gà', 'lẩu riêu', 'riêu cua', 'lẩu nấm', 'lẩu cá', 'lẩu mắm',
+  'hải sản', 'sốt thái', 'ốc hương', 'cút lộn', 'vịt lộn', 'khoai tây', 'tây chiên', 'khoai lang', 'lang kén', 'lang lắc',
+  'bắp xào', 'ngô luộc', 'ngô nướng', 'khoai nướng', 'khô gà', 'khô bò', 'khô heo', 'khô mực', 'mực rim', 'me ngào',
+  'xoài lắc', 'cóc lắc', 'mận lắc', 'chè bưởi', 'chè thái', 'chè đậu', 'đậu đỏ', 'chè sen', 'chè chuối', 'chè khoai', 'kem dừa', 'kem que', 'kem ly',
 
-  // Nấu nướng, Ẩm thực & Bữa ăn
-  'nấu ăn', 'nấu cơm', 'nấu nướng', 'nấu canh', 'nấu lẩu', 'nấu cháo', 'nấu chè', 'nấu súp', 'nấu bếp', 'nấu chín', 'nấu xôi', 'nấu nước', 'nấu mì',
-  'luộc rau', 'luộc trứng', 'luộc gà', 'luộc khoai', 'luộc ngô', 'luộc thịt', 'luộc ốc',
-  'kho cá', 'kho thịt', 'kho quẹt', 'kho tàu', 'kho tộ',
-  'rán cá', 'rán trứng', 'rán nem', 'rán bánh', 'rán chả',
-  'chiên cơm', 'chiên trứng', 'chiên xù', 'chiên giòn', 'chiên gà', 'chiên cá',
-  'xào rau', 'xào thịt', 'xào mì', 'xào lăn', 'xào chua', 'xào sả',
-  'nướng thịt', 'nướng cá', 'nướng mực', 'nướng bánh', 'nướng khoai', 'nướng ngô', 'nướng gà',
-  'hấp bánh', 'hấp cá', 'hấp gà', 'hấp tôm', 'hấp mực', 'hấp xôi',
-  'pha trà', 'pha sữa', 'pha nước', 'pha chế', 'pha trộn', 'pha lẫn', 'pha màu', 'pha trò', 'pha phôi', 'pha cà',
-  'cuốn nem', 'cuốn bánh', 'cuốn gỏi', 'cuốn chả',
-  'thái thịt', 'thái rau', 'thái lát', 'thái mỏng', 'thái nhỏ', 'thái sợi',
-  'băm thịt', 'băm nhỏ', 'nhặt rau', 'nhặt cỏ', 'gọt vỏ', 'bóc vỏ', 'bóc tôm', 'bóc trứng', 'vắt chanh', 'vắt cam', 'nêm nếm', 'nếm thử',
-  'ăn cơm', 'ăn sáng', 'ăn trưa', 'ăn tối', 'ăn khuya', 'ăn quà', 'ăn vặt', 'ăn nhậu', 'ăn chơi', 'ăn tiệc',
-  'ăn uống', 'ăn bám', 'ăn khớp', 'ăn ý', 'ăn ảnh', 'ăn diện', 'ăn chay', 'ăn mặn', 'ăn xin', 'ăn gian',
-  'ăn trộm', 'ăn cắp', 'ăn lẩu', 'ăn bánh', 'ăn kẹo', 'ăn ốc', 'ăn kèm', 'ăn hàng', 'ăn đứt', 'ăn chắc', 'ăn mặc',
-  'ăn phở', 'ăn bún', 'ăn mì', 'ăn xôi', 'ăn cháo', 'ăn no', 'ăn ngon',
-  'uống nước', 'uống trà', 'uống bia', 'uống rượu', 'uống thuốc', 'uống sữa', 'uống say', 'uống cạn',
-
-  // Đồ uống & Món ăn vặt hiện đại
-  'trà sữa', 'trà đào', 'trà tắc', 'trà sen', 'trà măng', 'măng cụt', 'trà chanh', 'trà dâu', 'trà xanh',
-  'trà ô', 'ô long', 'trà gạo', 'gạo lứt', 'hoa cúc', 'trà lài', 'trà đen', 'trà thảo', 'thảo mộc',
-  'trà vải', 'trà ổi', 'trà táo', 'trà quất', 'trà gừng', 'trà búp', 'trà sâm', 'trà atiso',
-  'cà phê', 'phê muối', 'phê trứng', 'phê sữa', 'phê đen', 'bạc xỉu', 'đen đá', 'nâu đá', 'sữa đá', 'sữa nóng',
-  'cacao', 'sinh tố', 'nước ép', 'nước mía', 'nước dừa', 'nước cam', 'nước chanh', 'nước lọc', 'nước suối', 'nước khoáng', 'nước ngọt', 'tăng lực',
-  'sữa hạt', 'sữa chua', 'chua nếp', 'nếp cẩm', 'sữa tươi', 'sữa đặc', 'sữa bắp', 'đậu nành', 'kem béo', 'kem cheese', 'trân châu', 'đường đen',
-  'thạch rau', 'rau câu', 'thạch dừa', 'thạch đen', 'matcha',
-  'bánh mì', 'bánh tráng', 'tráng trộn', 'tráng nướng', 'tráng cuộn', 'bánh cuốn', 'bánh bao', 'bánh xèo',
-  'bánh khọt', 'bánh bèo', 'bột lọc', 'bánh đúc', 'bánh giò', 'bánh chưng', 'bánh tét', 'bánh pía',
-  'bông lan', 'su kem', 'bánh tiêu', 'bánh rán', 'bánh quy', 'bánh kem', 'bánh flan', 'bánh gối', 'bánh cay', 'bánh chuối', 'bánh khoai', 'bánh quẩy',
-  'mì cay', 'mì tôm', 'mì xào', 'mì trộn', 'mì ý', 'mì quảng',
-  'bún đậu', 'mắm tôm', 'bún bò', 'bún chả', 'bún riêu', 'bún mắm', 'bún ốc', 'thịt nướng', 'bún cá', 'bún sườn',
-  'phở bò', 'phở gà', 'phở tái', 'phở nạm', 'phở xào', 'phở cuốn', 'phở trộn', 'hủ tiếu', 'bánh canh',
-  'cơm tấm', 'cơm sườn', 'cơm gà', 'cơm rang', 'cơm chiên', 'cơm lam', 'cơm nguội', 'cơm cuộn', 'cơm niêu', 'cơm nắm',
-  'gà rán', 'khoai tây', 'tây chiên', 'khoai lang', 'lang kén', 'lang lắc', 'nem chua', 'nem nướng', 'nem rán', 'nem lụi',
-  'chả giò', 'chả ram', 'chả lụa', 'chả cá', 'chả mực', 'chả quế', 'chả bò',
-  'lẩu thái', 'lẩu bò', 'lẩu gà', 'lẩu nấm', 'lẩu cua', 'lẩu dê', 'lẩu cá', 'lẩu riêu',
-  'hải sản', 'sốt thái', 'ốc hương', 'cút lộn', 'vịt lộn', 'chân gà', 'tai heo', 'dồi sụn', 'lạp xưởng', 'xúc xích',
-  'bò kho', 'bò né', 'bò sốt', 'sốt vang', 'bò bít', 'bít tết', 'gà luộc', 'gà ủ', 'ủ muối', 'vịt quay', 'heo quay',
-  'sườn xào', 'xào chua', 'chua ngọt', 'thịt kho', 'kho tàu', 'cá kho', 'canh chua',
-  'rau muống', 'rau cải', 'rau ngót', 'rau mồng', 'mồng tơi', 'rau dền', 'rau đay', 'mướp đắng', 'khổ qua',
-  'cà chua', 'cà tím', 'cà pháo', 'dưa chua', 'dưa muối', 'kim chi', 'bắp xào', 'ngô luộc', 'ngô nướng', 'khoai nướng',
-
-  // Từ lóng, Mạng xã hội, Gen Z, Trending
-  'đu trend', 'bắt trend', 'tạo trend', 'hot trend', 'đu idol', 'săn vé', 'săn sale', 'chốt đơn', 'bão đơn', 'nổ đơn',
-  'giao hàng', 'nhận hàng', 'hoàn hàng', 'boom hàng', 'freeship', 'voucher', 'giảm giá', 'áp mã', 'khuyến mãi', 'mã giảm', 'tiền ship', 'phí ship',
-  'ting ting', 'quét mã', 'chuyển khoản', 'nạp tiền', 'rút tiền', 'tài khoản', 'mật khẩu', 'đăng nhập', 'đăng xuất', 'bảo mật', 'hai lớp', 'chính chủ', 'xác thực', 'mã otp',
-  'thả tim', 'thả like', 'bình luận', 'chia sẻ', 'đăng bài', 'đăng story', 'gắn thẻ', 'chặn tin', 'kết bạn', 'hủy kết', 'theo dõi', 'lượt xem', 'tương tác', 'tin nhắn', 'nhắn tin', 'gọi điện', 'gọi video',
-  'livestream', 'phát trực', 'sống ảo', 'cà khịa', 'bóc phốt', 'hóng phốt', 'hóng biến', 'nổ biến', 'hít drama', 'chữa lành',
-  'cháy phố', 'căng đét', 'căng cực', 'đỉnh chóp', 'đỉnh nóc', 'kịch trần', 'keo lì', 'mãi đỉnh', 'mãi mận', 'hết nước', 'nước chấm',
-  'xanh chín', 'bật mood', 'tụt mood', 'bất ổn', 'chill chill', 'bốc phét', 'chém gió', 'lùa gà', 'úp bô', 'đu đỉnh', 'cắt lỗ', 'bắt đáy',
-  'cháy ví', 'cháy túi', 'vạ miệng', 'ác khẩu', 'nói điêu', 'nói phét', 'nói dối', 'nói khoác', 'tự luyến', 'vô tri',
-  'hài hước', 'lầy lội', 'nhây bựa', 'chín chắn', 'dễ thương', 'đáng yêu', 'thân thiện', 'ấm áp', 'lạnh lùng', 'soái ca', 'nữ thần',
-  'trai xinh', 'gái đẹp', 'trai đẹp', 'gái xinh', 'nhan sắc', 'ngoại hình', 'vóc dáng',
-  'hướng nội', 'hướng ngoại', 'nội tâm', 'tinh tế', 'độc lạ', 'ô dề', 'ra dẻ', 'mlem mlem', 'xu cà', 'cà na', 'cờ đỏ', 'cờ xanh',
-  'bất lực', 'chằm dzn', 'ét o', 'simp lỏd', 'simp chúa', 'tay to', 'múa rìu', 'out trình', 'gà mờ', 'tay mơ', 'tay chơi',
-  'trùm sò', 'trùm cuối', 'gánh team', 'tạ team', 'bóp team', 'cày cuốc', 'cày phim', 'cày view', 'chạy deadline', 'áp lực', 'trầm cảm',
-
-  // Công việc, Công sở & Công nghệ
-  'đi làm', 'tăng ca', 'tan ca', 'làm thêm', 'làm ca', 'chấm công', 'điểm danh', 'nhận lương', 'thưởng tết', 'tăng lương',
-  'nghỉ phép', 'nghỉ việc', 'nhảy việc', 'xin việc', 'phỏng vấn', 'thử việc', 'biên chế', 'hợp đồng', 'bảo hiểm', 'công đoàn',
-  'viết code', 'lập trình', 'sửa lỗi', 'fix bug', 'cài win', 'chạy server', 'gửi mail', 'họp nhóm', 'thuyết trình', 'làm báo', 'báo cáo',
-  'máy tính', 'bàn phím', 'chuột máy', 'màn hình', 'tai nghe', 'sạc pin', 'dây cáp', 'ổ cứng', 'thẻ nhớ', 'điện thoại', 'laptop', 'máy in', 'máy chiếu', 'phần mềm', 'ứng dụng',
-
-  // Sinh hoạt hàng ngày & Gia đình
-  'rửa bát', 'rửa chén', 'rửa xe', 'rửa mặt', 'rửa tay', 'rửa chân', 'rửa rau', 'rửa ảnh', 'rửa sạch',
-  'giặt giũ', 'giặt đồ', 'giặt áo', 'giặt quần', 'giặt là', 'giặt ủi', 'giặt máy', 'giặt tay',
-  'phơi đồ', 'phơi áo', 'phơi quần', 'phơi nắng', 'phơi khô', 'phơi sương', 'phơi bày', 'phơi trải',
-  'quét nhà', 'quét sân', 'quét dọn', 'quét rác', 'quét vôi', 'quét sơn', 'quét mã', 'quét thẻ', 'quét sạch',
-  'lau nhà', 'lau bàn', 'lau ghế', 'lau kính', 'lau dọn', 'lau chùi', 'lau khô',
-  'dọn dẹp', 'dọn nhà', 'dọn phòng', 'dọn cơm', 'dọn bàn', 'dọn rác', 'dọn đường', 'dọn cỗ',
-  'tắm rửa', 'tắm gội', 'gội đầu', 'chải tóc', 'sấy tóc', 'cắt tóc', 'nhuộm tóc', 'uốn tóc', 'đánh răng',
-  'đi chợ', 'đi học', 'đi ngủ', 'đi chơi', 'đi dạo', 'đi bộ', 'đi phượt', 'đi tour', 'đi thi', 'đi khám', 'đi lại',
-  'ngủ say', 'ngủ trưa', 'ngủ gật', 'ngủ nướng', 'ngủ mê', 'ngủ nghê', 'ngủ mơ', 'ngủ muộn', 'ngủ ngon',
-  'thức dậy', 'thức khuya', 'thức đêm', 'thức giấc', 'thức ăn', 'thức uống', 'thức thời',
-  'xem phim', 'xem kịch', 'xem tranh', 'xem xét', 'xem bói', 'xem lại', 'xem trộm', 'xem xiếc', 'xem bóng',
-  'nghe nhạc', 'nghe ngóng', 'nghe nhìn', 'nghe lời', 'nghe lén', 'nghe đài', 'nghe thử', 'nghe kể',
-  'đọc sách', 'đọc báo', 'đọc truyện', 'đọc tin', 'đọc hiểu', 'đọc thơ', 'đọc diễn', 'đọc bài',
-  'viết văn', 'viết bài', 'viết thư', 'viết lách', 'viết tay', 'viết sách',
-  'học sinh', 'học bài', 'học tập', 'học hành', 'học hỏi', 'học phí', 'học lực', 'học bổng', 'học viện', 'học thuật', 'học hàm', 'học vị', 'học kỳ', 'học đường', 'học lỏm', 'học thêm',
-  'dạy học', 'dạy bảo', 'dạy dỗ', 'dạy kèm', 'dạy con', 'dạy nghề',
-  'tập gym', 'tập yoga', 'tập tành', 'tập luyện', 'tập thể', 'tập làm', 'tập viết', 'tập đọc', 'tập vẽ', 'tập bơi', 'tập chạy', 'tập xe', 'tập múa', 'tập hát',
-  'chơi game', 'chơi bóng', 'chơi đùa', 'chơi bời', 'chơi trội', 'chơi net', 'chơi xấu', 'chơi bài', 'chơi cờ', 'chơi nhạc',
-
-  // Quan hệ, Tình cảm
-  'người yêu', 'bạn trai', 'bạn gái', 'bồ bịch', 'crush', 'tri kỷ', 'bạn thân', 'bạn cũ', 'tỏ tình', 'tán tỉnh', 'hẹn hò', 'yêu đương', 'chia tay',
-  'nắm tay', 'ôm ấp', 'hôn hít', 'kết hôn', 'ly hôn', 'vợ chồng', 'ông bà', 'cha mẹ', 'bố mẹ', 'anh chị', 'anh em', 'chị em', 'cô dì', 'chú bác', 'con cháu', 'dâu rể', 'thầy cô', 'học trò',
-
-  // Nối vòng chuỗi các từ ghép phổ biến
-  'viên gạch', 'gạch men', 'men gốm', 'gốm sứ', 'sứ mệnh', 'mệnh lệnh',
-  'chua cay', 'cay đắng', 'tôm khô', 'tôm hùm', 'hùm xám', 'xám xịt', 'bò khô', 'bò né', 'bò bía',
-  'bộ đồ', 'đồ chơi', 'sách vở', 'phim ảnh', 'nhạc sống', 'đá bóng', 'bóng đá', 'đá banh',
-  'con mèo', 'con chó', 'con gà', 'con heo', 'cái bàn', 'cái ghế', 'bông hoa',
-  'ly nước', 'nước cam', 'phê duyệt', 'phim truyện', 'truyện tranh', 'tranh vẽ', 'vẽ tranh',
-  'chợ búa', 'siêu thị', 'thị trường', 'xe máy', 'xe đạp', 'xe hơi', 'xe bus',
-  'máy bay', 'bay lượn', 'lượn sóng', 'sóng biển', 'biển cả', 'cả ngày',
-  'ngày mai', 'mai sau', 'sau này', 'này nọ', 'nọ kia', 'bài tập',
-  'tập làm', 'làm bài', 'viết thư', 'thư viện', 'viện bảo', 'bảo tàng',
-  'tàng hình', 'hình ảnh', 'ảnh chụp', 'chụp hình', 'hình học', 'học hỏi',
-  'hỏi thăm', 'thăm hỏi', 'hỏi han', 'han gỉ', 'gỉ sét', 'sét đánh',
-  'đánh chén', 'chén bát', 'bát đũa', 'đũa ăn',
-  'nguội lạnh', 'lạnh giá', 'giá cả', 'cả đời',
-  'đời sống', 'sống còn', 'còn lại', 'lại đây', 'đây đó', 'đó đây'
+  // --- 4. HÀNH ĐỘNG SINH HOẠT, CÔNG VIỆC & CUỘC SỐNG ---
+  'đi làm', 'đi học', 'tăng ca', 'tan ca', 'chấm công', 'nhận lương', 'thưởng tết', 'tăng lương', 'họp hành', 'làm slide', 'thuyết trình',
+  'nghỉ phép', 'nhảy việc', 'phỏng vấn', 'thử việc', 'hợp đồng', 'sa thải', 'đuổi việc', 'viết code', 'lập trình', 'sửa lỗi', 'fix bug',
+  'chạy server', 'gửi mail', 'lỗi mạng', 'lag mạng', 'máy tính', 'bàn phím', 'chuột máy', 'màn hình', 'tai nghe', 'sạc pin', 'điện thoại', 'laptop',
+  'tập gym', 'tập tạ', 'chạy bộ', 'đi bộ', 'bơi lội', 'đạp xe', 'leo núi', 'gập bụng', 'hít đất', 'kéo xà', 'đá bóng', 'đá banh', 'bóng rổ',
+  'bóng chuyền', 'cầu lông', 'bóng bàn', 'pickleball', 'đánh gôn', 'quần vợt', 'lái xe', 'đi xe', 'xe máy', 'xe đạp', 'xe hơi', 'xe buýt',
+  'tàu hỏa', 'máy bay', 'kẹt xe', 'tắc đường', 'đèn đỏ', 'bắn tốc', 'tốc độ', 'bằng lái', 'giao thông', 'đường phố',
+  'nấu ăn', 'nấu cơm', 'nấu nướng', 'nấu canh', 'nấu lẩu', 'luộc rau', 'kho cá', 'kho thịt', 'rán cá', 'chiên cơm', 'xào rau', 'nướng thịt',
+  'hấp bánh', 'pha trà', 'pha sữa', 'thái thịt', 'băm thịt', 'nhặt rau', 'gọt vỏ', 'bóc vỏ', 'vắt chanh', 'nêm nếm', 'nếm thử',
+  'tưới cây', 'chăm cây', 'chặt cây', 'tỉa cây', 'chiết cành', 'ghép cành', 'nhổ cỏ', 'bón phân', 'leo cây', 'trèo cây', 'hái hoa', 'nuôi cá', 'bắt sâu',
+  'trồng cây', 'trồng hoa', 'trồng rau', 'trồng lúa', 'trồng rừng', 'trồng nấm', 'trồng ngô', 'trồng khoai', 'trồng cỏ', 'trồng sen', 'trồng dâu', 'trồng dưa',
+  'cây xanh', 'cây cối', 'cây cảnh', 'cây hoa', 'cây cỏ', 'cây rừng', 'cây lúa', 'cây đa', 'cây đề', 'cây bàng', 'cây phượng', 'cây thông', 'cây tre',
+  'cành cây', 'lá cây', 'hoa hồng', 'hoa mai', 'hoa đào', 'hoa cúc', 'hoa sen', 'hoa lan', 'quả ngọt', 'quả chua', 'trái cây', 'trái tim', 'trái đất'
 ];
 
 async function main() {
-  console.log('Downloading and compiling comprehensive Vietnamese dictionaries...');
+  console.log('====================================================');
+  console.log('🚀 COMPILING MEGA DICTIONARY FOR GAME NỐI TỪ 🚀');
+  console.log('====================================================');
+
   const dataDir = path.join(__dirname, '..', 'src', 'data');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-
-  let wordsJsData = '';
-  let viet74kData = '';
-  let undertheseaData = '';
-
-  // 1. Fetch undertheseanlp words.txt
-  try {
-    console.log('Fetching undertheseanlp/dictionary words.txt...');
-    undertheseaData = await fetchUrl('https://raw.githubusercontent.com/undertheseanlp/dictionary/master/dictionary/words.txt');
-    console.log(`Downloaded undertheseanlp words.txt (${Math.round(undertheseaData.length / 1024)} KB).`);
-  } catch (e) {
-    console.warn('Could not fetch undertheseanlp words.txt:', e.message);
-  }
-
-  // 2. Fetch words.js
-  try {
-    console.log('Fetching NNBnh/noi-tu words.js...');
-    wordsJsData = await fetchUrl('https://raw.githubusercontent.com/NNBnh/noi-tu/master/words/words.js');
-    console.log('Downloaded words.js successfully.');
-  } catch (e) {
-    console.warn('Could not fetch words.js:', e.message);
-  }
-
-  // 3. Fetch Viet74K.txt
-  try {
-    console.log('Fetching Viet74K.txt...');
-    viet74kData = await fetchUrl('https://raw.githubusercontent.com/duyet/vietnamese-wordlist/master/Viet74K.txt');
-    console.log('Downloaded Viet74K.txt successfully.');
-  } catch (e) {
-    console.warn('Could not fetch Viet74K.txt:', e.message);
-  }
+  const dictPath = path.join(dataDir, 'dictionary.json');
+  const customTxtPath = path.join(dataDir, 'custom_words.txt');
 
   const wordSet = new Set();
-  const graph = {}; // { firstSyllable: Set(secondSyllables) }
+  const graph = {}; // headSyllable -> Set(tailSyllables)
 
   function addWord(first, second) {
     if (!first || !second) return;
@@ -236,111 +146,168 @@ async function main() {
     graph[first].add(second);
   }
 
-  // Process undertheseanlp
-  if (undertheseaData) {
-    const lines = undertheseaData.split(/\r?\n/);
-    for (const line of lines) {
-      if (!line) continue;
+  // 1. Fetch undertheseanlp words.txt (~79,226 entries)
+  try {
+    console.log('📦 1/6 Downloading undertheseanlp words.txt...');
+    const utsData = await fetchUrl('https://raw.githubusercontent.com/undertheseanlp/dictionary/master/dictionary/words.txt');
+    const lines = utsData.split(/\r?\n/);
+    for (const l of lines) {
+      if (!l) continue;
       try {
-        const obj = JSON.parse(line);
+        const obj = JSON.parse(l);
         if (obj && typeof obj.text === 'string') {
           const parts = obj.text.trim().toLowerCase().normalize('NFC').split(/\s+/);
-          if (parts.length === 2) {
-            addWord(parts[0], parts[1]);
-          }
+          if (parts.length === 2) addWord(parts[0], parts[1]);
         }
       } catch (e) {}
     }
+    console.log(`   ✓ Loaded undertheseanlp: ${wordSet.size} unique 2-syllable words so far.`);
+  } catch (err) {
+    console.warn('   ⚠️ Failed to fetch undertheseanlp:', err.message);
   }
 
-  // Process words.js
-  if (wordsJsData) {
+  // 2. Fetch duyet/vietnamese-wordlist (Viet74K.txt & Viet39K.txt)
+  try {
+    console.log('📦 2/6 Downloading Viet74K.txt...');
+    const v74k = await fetchUrl('https://raw.githubusercontent.com/duyet/vietnamese-wordlist/master/Viet74K.txt');
+    for (const l of v74k.split(/\r?\n/)) {
+      const parts = l.trim().toLowerCase().normalize('NFC').split(/\s+/);
+      if (parts.length === 2) addWord(parts[0], parts[1]);
+    }
+    console.log(`   ✓ Loaded Viet74K: ${wordSet.size} words.`);
+  } catch (err) {
+    console.warn('   ⚠️ Failed to fetch Viet74K:', err.message);
+  }
+
+  try {
+    console.log('📦 3/6 Downloading Viet39K.txt...');
+    const v39k = await fetchUrl('https://raw.githubusercontent.com/duyet/vietnamese-wordlist/master/Viet39K.txt');
+    for (const l of v39k.split(/\r?\n/)) {
+      const parts = l.trim().toLowerCase().normalize('NFC').split(/\s+/);
+      if (parts.length === 2) addWord(parts[0], parts[1]);
+    }
+    console.log(`   ✓ Loaded Viet39K: ${wordSet.size} words.`);
+  } catch (err) {
+    console.warn('   ⚠️ Failed to fetch Viet39K:', err.message);
+  }
+
+  // 3. Fetch NNBnh/noi-tu words.js
+  try {
+    console.log('📦 4/6 Downloading NNBnh/noi-tu words.js...');
+    const wjs = await fetchUrl('https://raw.githubusercontent.com/NNBnh/noi-tu/master/words/words.js');
     const sandbox = {};
-    try {
-      new Function('sandbox', wordsJsData + '; sandbox.words = words;')(sandbox);
-      if (sandbox.words) {
-        for (const first of Object.keys(sandbox.words)) {
-          const list = sandbox.words[first];
-          if (Array.isArray(list)) {
-            for (const second of list) {
-              if (typeof second === 'string' && second) {
-                addWord(first, second);
-              }
-            }
-          }
+    new Function('sandbox', wjs + '; sandbox.words = words;')(sandbox);
+    if (sandbox.words) {
+      for (const f of Object.keys(sandbox.words)) {
+        for (const s of sandbox.words[f]) {
+          addWord(f, s);
         }
       }
-    } catch (e) {
-      console.warn('Error parsing words.js:', e.message);
     }
+    console.log(`   ✓ Loaded words.js: ${wordSet.size} words.`);
+  } catch (err) {
+    console.warn('   ⚠️ Failed to fetch words.js:', err.message);
   }
 
-  // Process Viet74K
-  if (viet74kData) {
-    const lines = viet74kData.split(/\r?\n/);
-    for (const rawLine of lines) {
-      const line = rawLine.trim().toLowerCase().normalize('NFC');
-      const parts = line.split(/\s+/);
-      if (parts.length === 2) {
-        addWord(parts[0], parts[1]);
+  // 4. Fetch winstonleedev POS-tagged dictionaries
+  const wFiles = ['dongtu.txt', 'danhtu.txt', 'tinhtu.txt', 'tudien.txt'];
+  for (const f of wFiles) {
+    try {
+      console.log(`📦 Fetching winstonleedev/${f}...`);
+      const txt = await fetchUrl(`https://raw.githubusercontent.com/winstonleedev/tudien/master/${f}`);
+      for (const l of txt.split(/\r?\n/)) {
+        const parts = l.trim().toLowerCase().normalize('NFC').split(/\s+/);
+        if (parts.length === 2) addWord(parts[0], parts[1]);
       }
+    } catch (e) {}
+  }
+  console.log(`   ✓ Loaded winstonleedev dictionaries: ${wordSet.size} words.`);
+
+  // 5. Fetch HuggingFace tsdocode/vietnamese-dictionary
+  try {
+    console.log('📦 5/6 Downloading HuggingFace vi_dictionary.csv...');
+    const csv = await fetchUrl('https://huggingface.co/datasets/tsdocode/vietnamese-dictionary/raw/main/vi_dictionary.csv');
+    const lines = csv.split(/\r?\n/);
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      let w = '';
+      if (line.startsWith('"')) {
+        const q = line.indexOf('"', 1);
+        if (q !== -1) w = line.substring(1, q);
+      } else {
+        w = line.split(',')[0];
+      }
+      w = (w || '').trim().toLowerCase().normalize('NFC');
+      const parts = w.split(/\s+/);
+      if (parts.length === 2) addWord(parts[0], parts[1]);
     }
+    console.log(`   ✓ Loaded HuggingFace vi_dictionary: ${wordSet.size} words.`);
+  } catch (err) {
+    console.warn('   ⚠️ Failed to fetch HuggingFace dictionary:', err.message);
   }
 
-  // Process custom_words.txt if already exists
-  const customTxtPath = path.join(dataDir, 'custom_words.txt');
+  // 6. Load existing custom words
   if (fs.existsSync(customTxtPath)) {
     const lines = fs.readFileSync(customTxtPath, 'utf8').split(/\r?\n/);
-    for (const rawLine of lines) {
-      const line = rawLine.trim().toLowerCase().normalize('NFC');
-      const parts = line.split(/\s+/);
-      if (parts.length === 2) {
-        addWord(parts[0], parts[1]);
-      }
+    for (const l of lines) {
+      const parts = l.trim().toLowerCase().normalize('NFC').split(/\s+/);
+      if (parts.length === 2) addWord(parts[0], parts[1]);
     }
   }
 
-  // Process modern and daily words
+  // 7. Inject Curated Modern, Daily & Gen Z Vocabulary
+  console.log('📦 6/6 Injecting Curated Modern, Daily & Gen Z Vocabulary...');
   for (const item of MODERN_AND_DAILY_WORDS) {
     const parts = item.trim().toLowerCase().normalize('NFC').split(/\s+/);
-    if (parts.length === 2) {
-      addWord(parts[0], parts[1]);
-    }
+    if (parts.length === 2) addWord(parts[0], parts[1]);
   }
 
-  // Convert graph sets to arrays
+  // Convert graph sets to sorted arrays
   const serializableGraph = {};
   for (const k of Object.keys(graph)) {
     serializableGraph[k] = Array.from(graph[k]).sort();
   }
 
   const resultWords = Array.from(wordSet).sort();
-  console.log(`✅ Dictionary compiled: ${resultWords.length} unique 2-syllable Vietnamese words.`);
-  console.log(`✅ Graph contains ${Object.keys(serializableGraph).length} unique head syllables.`);
+  console.log('====================================================');
+  console.log(`🎉 COMPILATION COMPLETE!`);
+  console.log(`📚 Total 2-syllable Vietnamese words: ${resultWords.length}`);
+  console.log(`🌐 Total root syllables in graph: ${Object.keys(serializableGraph).length}`);
+  console.log('====================================================');
 
-  // Write dictionary.json
-  const outputPath = path.join(dataDir, 'dictionary.json');
-  fs.writeFileSync(outputPath, JSON.stringify({
+  // Save dictionary.json
+  fs.writeFileSync(dictPath, JSON.stringify({
     count: resultWords.length,
     words: resultWords,
     graph: serializableGraph
   }));
-  console.log(`Saved dictionary to: ${outputPath}`);
+  console.log(`✓ Saved ${resultWords.length} words to: ${dictPath}`);
 
-  // Write custom_words.txt with all modern & daily additions
-  fs.writeFileSync(customTxtPath, MODERN_AND_DAILY_WORDS.sort().join('\n') + '\n', 'utf8');
-  console.log(`Saved custom words list to: ${customTxtPath}`);
+  // Save custom_words.txt
+  const allCustomWords = Array.from(new Set([
+    ...MODERN_AND_DAILY_WORDS.map(w => w.trim().toLowerCase().normalize('NFC')),
+    ...(fs.existsSync(customTxtPath) ? fs.readFileSync(customTxtPath, 'utf8').split(/\r?\n/).filter(Boolean) : [])
+  ])).sort();
 
-  // Verify 'trồng cây'
-  if (wordSet.has('trồng cây')) {
-    console.log('🎯 Verified: "trồng cây" is in the dictionary!');
-    console.log('Follow-ups for "cây":', serializableGraph['cây']?.slice(0, 15));
-  } else {
-    console.error('❌ ERROR: "trồng cây" was NOT added!');
-  }
+  fs.writeFileSync(customTxtPath, allCustomWords.join('\n') + '\n', 'utf8');
+  console.log(`✓ Saved ${allCustomWords.length} custom words to: ${customTxtPath}`);
+
+  // CRITICAL VERIFICATION: Check 'diện đồ' and connectivity
+  console.log('----------------------------------------------------');
+  console.log('🔎 VERIFICATION TESTS:');
+  console.log('Has "diện đồ":', wordSet.has('diện đồ') ? '✅ YES' : '❌ NO');
+  console.log('Next words from "diện":', serializableGraph['diện']);
+  console.log('Next words from "đồ":', serializableGraph['đồ']?.slice(0, 15));
+  console.log('Has "trồng cây":', wordSet.has('trồng cây') ? '✅ YES' : '❌ NO');
+  console.log('Has "bắt trend":', wordSet.has('bắt trend') ? '✅ YES' : '❌ NO');
+  console.log('Has "chữa lành":', wordSet.has('chữa lành') ? '✅ YES' : '❌ NO');
+  console.log('Has "vô tri":', wordSet.has('vô tri') ? '✅ YES' : '❌ NO');
+  console.log('Has "flex đồ":', wordSet.has('flex đồ') ? '✅ YES' : '❌ NO');
+  console.log('----------------------------------------------------');
 }
 
 main().catch(err => {
-  console.error('Failed to build dictionary:', err);
+  console.error('Build failed:', err);
   process.exit(1);
 });

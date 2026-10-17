@@ -95,6 +95,23 @@ const test18 = referee.validate('trà sữa', 'trà', new Set());
 assert.strictEqual(test18.valid, true, 'Should accept modern word "trà sữa"');
 console.log('✓ Accepts modern word "trà sữa"');
 
+// Test 8b: Colloquial fashion and Gen Z words
+const testDienDo = referee.validate('diện đồ', 'diện', new Set(['tình diện']));
+assert.strictEqual(testDienDo.valid, true, 'Should accept "diện đồ" after "diện"');
+console.log('✓ Accepts "diện đồ" after "diện"');
+
+const testDoBo = referee.validate('đồ bộ', 'đồ', new Set(['diện đồ']));
+assert.strictEqual(testDoBo.valid, true, 'Should accept "đồ bộ" after "đồ"');
+console.log('✓ Accepts "đồ bộ" after "đồ"');
+
+const testFlexDo = referee.validate('flex đồ', 'flex', new Set());
+assert.strictEqual(testFlexDo.valid, true, 'Should accept "flex đồ"');
+console.log('✓ Accepts "flex đồ"');
+
+const testVoTri = referee.validate('vô tri', 'vô', new Set());
+assert.strictEqual(testVoTri.valid, true, 'Should accept "vô tri"');
+console.log('✓ Accepts "vô tri"');
+
 // Test 9: Unicode NFD (Decomposed from mobile keyboards)
 const nfdTrongCay = 'trồng cây'.normalize('NFD');
 const test19 = referee.validate(nfdTrongCay, 'trồng', new Set());
