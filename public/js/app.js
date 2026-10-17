@@ -156,68 +156,71 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateViewport() {
     const vv = window.visualViewport;
     const height = vv ? vv.height : window.innerHeight;
-    const top = vv ? vv.offsetTop : 0;
+
+    // In iOS Safari, the browser may shift the layout viewport upward (window.scrollY > 0),
+    // or offset the visual viewport (vv.offsetTop > 0).
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    const vvOffset = vv ? (vv.offsetTop || 0) : 0;
+    const totalOffset = vvOffset + scrollY;
 
     rootStyle.setProperty('--vv-height', `${height}px`);
-    rootStyle.setProperty('--vv-top', `${top}px`);
+    rootStyle.setProperty('--vv-top', `${totalOffset}px`);
     rootStyle.setProperty('--vvh', `${height}px`);
 
-    // Detect if virtual keyboard is open (viewport height shrunk significantly)
-    const isKeyboardOpen = vv ? (window.innerHeight - vv.height > 120) : false;
+    // Detect if virtual keyboard is open
+    const isInputActive = document.activeElement && 
+      (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+    const isHeightShrunk = vv ? (window.innerHeight - vv.height > 60) : false;
+    const isKeyboardOpen = isInputActive || isHeightShrunk || totalOffset > 0;
     document.body.classList.toggle('keyboard-open', isKeyboardOpen);
 
-    // Force window scroll back to 0 to prevent iOS layout offset
-    if (window.scrollY !== 0 || window.scrollX !== 0) {
-      window.scrollTo(0, 0);
-    }
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-
-    if (chatFeed) {
+    // Keep chat scrolled to bottom when keyboard is open
+    if (chatFeed && isKeyboardOpen) {
       chatFeed.scrollTop = chatFeed.scrollHeight;
     }
   }
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateViewport);
-    window.visualViewport.addEventListener('scroll', () => {
-      updateViewport();
-      window.scrollTo(0, 0);
-    });
+    window.visualViewport.addEventListener('scroll', updateViewport);
   }
   window.addEventListener('resize', updateViewport);
   window.addEventListener('orientationchange', () => setTimeout(updateViewport, 200));
-  window.addEventListener('scroll', () => {
-    if (window.scrollY !== 0 || window.scrollX !== 0) {
-      window.scrollTo(0, 0);
-    }
-  });
+  window.addEventListener('scroll', updateViewport);
   updateViewport();
 
   // Reset any layout shift on focus and blur across all text inputs
   [inputWord, inputNickname, inputRoomCode].forEach(input => {
     if (!input) return;
     input.addEventListener('focus', () => {
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        updateViewport();
-      }, 50);
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        updateViewport();
-      }, 250);
+      document.body.classList.add('keyboard-open');
+      updateViewport();
+      // Counter Safari's native scroll animation across multiple frames
+      [30, 80, 150, 300].forEach(delay => {
+        setTimeout(() => {
+          if (window.scrollY !== 0 || window.scrollX !== 0) {
+            window.scrollTo(0, 0);
+          }
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+          updateViewport();
+        }, delay);
+      });
     });
 
     input.addEventListener('blur', () => {
       setTimeout(() => {
         window.scrollTo(0, 0);
         document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
         updateViewport();
-      }, 100);
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        updateViewport();
+      }, 250);
     });
   });
 
@@ -229,6 +232,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, { passive: true });
   }
+
+  // Prevent elastic rubber-banding outside scrollable containers on iOS
+  document.addEventListener('touchmove', (e) => {
+    if (!e.target.closest('#chatFeed, .overflow-y-auto, .overflow-x-auto, input, textarea, select')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
 
   function syncRoomSession() {
     const savedRoomId = sessionStorage.getItem('noitu_room_id') || localStorage.getItem(`noitu_room_${tabId}`) || localStorage.getItem('noitu_last_room');
@@ -444,7 +454,9 @@ document.addEventListener('DOMContentLoaded', () => {
     tabCreateRoom.className = 'py-2.5 rounded-lg text-base font-bold text-slate-500 hover:text-slate-900 transition';
     panelJoinRoom.classList.remove('hidden');
     panelCreateRoom.classList.add('hidden');
-    setTimeout(() => inputRoomCode.focus(), 100);
+    setTimeout(() => {
+      try { inputRoomCode.focus({ preventScroll: true }); } catch (e) { inputRoomCode.focus(); }
+    }, 100);
   });
 
   // Auto-detect URL parameter `?room=CODE`
@@ -477,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const code = inputRoomCode.value.trim().toUpperCase();
     if (!code) {
       showToast('Vui lòng nhập mã phòng!', 'warning');
-      inputRoomCode.focus();
+      try { inputRoomCode.focus({ preventScroll: true }); } catch (e) { inputRoomCode.focus(); }
       return;
     }
     window.soundManager.playPop();
@@ -802,7 +814,11 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSendWord.disabled = false;
       inputWord.placeholder = 'Nhập từ...';
       if (document.activeElement !== inputWord) {
-        inputWord.focus();
+        try {
+          inputWord.focus({ preventScroll: true });
+        } catch (e) {
+          inputWord.focus();
+        }
       }
       typingIndicator.classList.add('hidden');
     } else {
