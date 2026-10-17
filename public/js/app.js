@@ -138,11 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Avatar HTML Renderer (supports emojis & custom image avatars)
   function renderAvatarHtml(avatar, sizeClass = 'w-6 h-6 text-sm') {
-    if (!avatar) return '🐰';
+    if (!avatar) return `<span class="${sizeClass} inline-flex items-center justify-center">🐰</span>`;
     if (avatar.startsWith('/') || avatar.includes('custom_avatar') || avatar.startsWith('http') || avatar.startsWith('data:')) {
       return `<img src="${avatar}" alt="Avatar" class="${sizeClass} object-cover rounded-full inline-block pointer-events-none" />`;
     }
-    return `<span class="inline-flex items-center justify-center">${avatar}</span>`;
+    return `<span class="${sizeClass} inline-flex items-center justify-center">${avatar}</span>`;
   }
 
   // Setup saved avatar
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
       warning: 'bg-amber-600 text-white border-amber-500'
     };
 
-    toast.className = `px-3.5 py-2 rounded-xl border shadow-md text-xs font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center justify-between space-x-2 ${colors[type] || colors.info}`;
+    toast.className = `px-4 py-2.5 rounded-xl border shadow-md text-sm sm:text-base font-bold transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center justify-between space-x-2 ${colors[type] || colors.info}`;
     toast.innerHTML = `<span>${message}</span>`;
     toastContainer.appendChild(toast);
 
@@ -369,8 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnModeRounds && btnModeBR) {
     btnModeRounds.addEventListener('click', () => {
       selectedGameMode = 'rounds';
-      btnModeRounds.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border-2 border-blue-600 bg-blue-50 text-blue-700 transition';
-      btnModeBR.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 transition';
+      btnModeRounds.className = 'btn-mode-opt py-3 px-2 rounded-xl text-base font-bold border-2 border-blue-600 bg-blue-50 text-blue-700 transition';
+      btnModeBR.className = 'btn-mode-opt py-3 px-2 rounded-xl text-base font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 transition';
       roundsSelectionGroup.classList.remove('hidden');
       brDescGroup.classList.add('hidden');
       window.soundManager.playPop();
@@ -378,8 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnModeBR.addEventListener('click', () => {
       selectedGameMode = 'battle_royale';
-      btnModeBR.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border-2 border-blue-600 bg-blue-50 text-blue-700 transition';
-      btnModeRounds.className = 'btn-mode-opt py-2 px-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 transition';
+      btnModeBR.className = 'btn-mode-opt py-3 px-2 rounded-xl text-base font-bold border-2 border-blue-600 bg-blue-50 text-blue-700 transition';
+      btnModeRounds.className = 'btn-mode-opt py-3 px-2 rounded-xl text-base font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 transition';
       roundsSelectionGroup.classList.add('hidden');
       brDescGroup.classList.remove('hidden');
       window.soundManager.playPop();
@@ -390,9 +390,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.btn-round-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-round-opt').forEach(b => {
-        b.className = 'btn-round-opt py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300';
+        b.className = 'btn-round-opt py-2.5 rounded-xl text-sm sm:text-base font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300';
       });
-      btn.className = 'btn-round-opt py-1.5 rounded-xl text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700';
+      btn.className = 'btn-round-opt py-2.5 rounded-xl text-sm sm:text-base font-bold border-2 border-blue-600 bg-blue-50 text-blue-700';
       selectedRounds = parseInt(btn.dataset.rounds, 10);
       window.soundManager.playPop();
     });
@@ -419,9 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.btn-time-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-time-opt').forEach(b => {
-        b.className = 'btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300';
+        b.className = 'btn-time-opt py-2.5 rounded-xl text-sm sm:text-base font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300';
       });
-      btn.className = 'btn-time-opt py-2 rounded-xl text-xs sm:text-sm font-bold border-2 border-blue-600 bg-blue-50 text-blue-700';
+      btn.className = 'btn-time-opt py-2.5 rounded-xl text-sm sm:text-base font-bold border-2 border-blue-600 bg-blue-50 text-blue-700';
       selectedTimedSeconds = parseInt(btn.dataset.time, 10);
       if (isTimerEnabled) {
         turnDuration = selectedTimedSeconds;
@@ -433,15 +433,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Tab switching
   tabCreateRoom.addEventListener('click', () => {
-    tabCreateRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-900 bg-white shadow-sm transition';
-    tabJoinRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
+    tabCreateRoom.className = 'py-2.5 rounded-lg text-base font-bold text-slate-900 bg-white shadow-sm transition';
+    tabJoinRoom.className = 'py-2.5 rounded-lg text-base font-bold text-slate-500 hover:text-slate-900 transition';
     panelCreateRoom.classList.remove('hidden');
     panelJoinRoom.classList.add('hidden');
   });
 
   tabJoinRoom.addEventListener('click', () => {
-    tabJoinRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-900 bg-white shadow-sm transition';
-    tabCreateRoom.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
+    tabJoinRoom.className = 'py-2.5 rounded-lg text-base font-bold text-slate-900 bg-white shadow-sm transition';
+    tabCreateRoom.className = 'py-2.5 rounded-lg text-base font-bold text-slate-500 hover:text-slate-900 transition';
     panelJoinRoom.classList.remove('hidden');
     panelCreateRoom.classList.add('hidden');
     setTimeout(() => inputRoomCode.focus(), 100);
@@ -665,10 +665,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (room.turnDuration === 0) {
       roomDurationBadge.textContent = 'Không tính giờ';
       timerNumber.textContent = '∞';
-      timerNumber.className = 'text-sm sm:text-base font-bold text-slate-400 font-mono';
+      timerNumber.className = 'text-xl sm:text-2xl font-black text-slate-400 font-mono';
       timerProgressBar.style.width = '100%';
       timerProgressBar.className = 'h-full bg-slate-200 transition-all duration-300';
-      timerBox.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
     } else {
       roomDurationBadge.textContent = `${room.turnDuration}s`;
     }
@@ -696,8 +696,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clientControls.classList.remove('hidden');
         btnToggleReady.textContent = me?.isReady ? 'Hủy sẵn sàng' : 'Sẵn sàng';
         btnToggleReady.className = me?.isReady 
-          ? 'w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm shadow-sm transition active:scale-98'
-          : 'w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition active:scale-98';
+          ? 'w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-lg shadow-sm transition active:scale-98'
+          : 'w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg shadow-sm transition active:scale-98';
       }
     } else if (room.status === 'playing' || room.status === 'round_ended' || room.status === 'match_ended' || room.status === 'ended') {
       showView('game');
@@ -713,28 +713,28 @@ document.addEventListener('DOMContentLoaded', () => {
     waitingPlayersList.innerHTML = '';
     players.forEach(p => {
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 transition';
+      item.className = 'flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 transition';
       
       const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
       item.innerHTML = `
         <div class="flex items-center space-x-3 min-w-0">
-          <span class="flex-shrink-0 flex items-center justify-center w-8 h-8">${renderAvatarHtml(p.avatar, 'w-8 h-8 text-2xl')}</span>
+          <span class="flex-shrink-0 flex items-center justify-center w-9 h-9">${renderAvatarHtml(p.avatar, 'w-9 h-9 text-2xl')}</span>
           <div class="min-w-0">
-            <div class="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-1.5 truncate">
+            <div class="text-base sm:text-lg font-bold text-slate-900 flex items-center space-x-2 truncate">
               <span class="truncate">${p.nickname}</span>
-              ${isMe ? '<span class="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold flex-shrink-0">BẠN</span>' : ''}
-              ${p.isHost ? '<span class="text-[10px] sm:text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold flex-shrink-0">Chủ phòng</span>' : ''}
-              ${p.isBot ? '<span class="text-[10px] sm:text-xs bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold flex-shrink-0">Bot</span>' : ''}
-              ${p.isDisconnected ? '<span class="text-[10px] sm:text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold flex-shrink-0">Mất mạng</span>' : ''}
+              ${isMe ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-black flex-shrink-0">BẠN</span>' : ''}
+              ${p.isHost ? '<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-black flex-shrink-0">Chủ phòng</span>' : ''}
+              ${p.isBot ? '<span class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-black flex-shrink-0">Bot</span>' : ''}
+              ${p.isDisconnected ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-black flex-shrink-0">Mất mạng</span>' : ''}
             </div>
           </div>
         </div>
         <div class="flex items-center space-x-2 flex-shrink-0">
           ${p.isHost 
-            ? '<span class="text-xs sm:text-sm font-bold text-emerald-600">Sẵn sàng</span>' 
+            ? '<span class="text-sm sm:text-base font-bold text-emerald-600">Sẵn sàng</span>' 
             : p.isReady 
-              ? '<span class="text-xs sm:text-sm font-bold text-emerald-600">Sẵn sàng</span>' 
-              : '<span class="text-xs sm:text-sm font-medium text-slate-400">Đang chờ</span>'}
+              ? '<span class="text-sm sm:text-base font-bold text-emerald-600">Sẵn sàng</span>' 
+              : '<span class="text-sm sm:text-base font-semibold text-slate-400">Đang chờ</span>'}
           ${amIHost && p.isBot ? `<button onclick="window.removeBot('${p.id}')" class="text-slate-400 hover:text-red-500 p-1.5" title="Xóa Bot"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
         </div>
       `;
@@ -769,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const activePlayer = room.players[room.turnIndex];
     if (activePlayer) {
-      activePlayerAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-6 h-6 text-sm');
+      activePlayerAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-6 h-6 text-base');
       activePlayerName.textContent = `@${activePlayer.nickname}`;
     }
 
@@ -779,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const badge = document.createElement('div');
       const isTurn = activePlayer && p.id === activePlayer.id;
       const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
-      badge.className = `flex-shrink-0 flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border text-xs sm:text-sm font-semibold transition ${
+      badge.className = `flex-shrink-0 flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-sm sm:text-base font-bold transition ${
         isTurn 
           ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' 
           : p.isAlive 
@@ -788,9 +788,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }`;
       badge.innerHTML = `
         <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-5 h-5 text-sm')}</span>
-        <span class="max-w-[85px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
-        ${p.isAlive ? '<span class="text-emerald-500 text-[10px]">●</span>' : '<span class="text-red-500 text-[10px]">×</span>'}
-        <span class="text-xs text-slate-400 font-mono font-bold">(${p.score})</span>
+        <span class="max-w-[105px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
+        ${p.isAlive ? '<span class="text-emerald-500 text-xs font-bold">●</span>' : '<span class="text-red-500 text-xs font-bold">×</span>'}
+        <span class="text-xs sm:text-sm text-slate-400 font-mono font-bold">(${p.score})</span>
       `;
       gamePlayersStrip.appendChild(badge);
     });
@@ -815,7 +815,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (activePlayer && room.status === 'playing') {
-        typingAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-5 h-5 text-sm');
+        typingAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-6 h-6 text-base');
         typingText.textContent = `${activePlayer.nickname} đang suy nghĩ...`;
         typingIndicator.classList.remove('hidden');
       } else {
@@ -828,10 +828,10 @@ document.addEventListener('DOMContentLoaded', () => {
   socket.on('timer_tick', ({ timeRemaining, totalDuration, isUnlimited }) => {
     if (isUnlimited || totalDuration === 0) {
       timerNumber.textContent = '∞';
-      timerNumber.className = 'text-sm sm:text-base font-bold text-slate-400 font-mono';
+      timerNumber.className = 'text-xl sm:text-2xl font-black text-slate-400 font-mono';
       timerProgressBar.style.width = '100%';
       timerProgressBar.className = 'h-full bg-slate-200 transition-all duration-300';
-      timerBox.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
       return;
     }
 
@@ -840,17 +840,17 @@ document.addEventListener('DOMContentLoaded', () => {
     timerProgressBar.style.width = `${pct}%`;
 
     if (timeRemaining <= 4) {
-      timerBox.className = 'w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-red-50 border-2 border-red-500 flex items-center justify-center timer-critical transition-colors duration-300';
-      timerNumber.className = 'text-base sm:text-lg font-black text-red-600 font-mono';
+      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-red-50 border-2 border-red-500 flex items-center justify-center timer-critical transition-colors duration-300';
+      timerNumber.className = 'text-lg sm:text-2xl font-black text-red-600 font-mono';
       timerProgressBar.className = 'h-full bg-red-500 transition-all duration-300';
       window.soundManager.playTick();
     } else if (timeRemaining <= 7) {
-      timerBox.className = 'w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 border-2 border-amber-500 flex items-center justify-center transition-colors duration-300';
-      timerNumber.className = 'text-base sm:text-lg font-black text-amber-600 font-mono';
+      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-50 border-2 border-amber-500 flex items-center justify-center transition-colors duration-300';
+      timerNumber.className = 'text-lg sm:text-2xl font-black text-amber-600 font-mono';
       timerProgressBar.className = 'h-full bg-amber-500 transition-all duration-300';
     } else {
-      timerBox.className = 'w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center transition-colors duration-300';
-      timerNumber.className = 'text-base sm:text-lg font-black text-slate-800 font-mono';
+      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+      timerNumber.className = 'text-lg sm:text-2xl font-black text-slate-800 font-mono';
       timerProgressBar.className = 'h-full bg-blue-600 transition-all duration-300';
     }
   });
@@ -858,16 +858,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Helper renderers for chat feed messages
   function renderTurnAnnouncement({ nickname, avatar, syllable, startWord, isOpening }) {
     const pill = document.createElement('div');
-    pill.className = 'flex items-center justify-center my-1.5';
+    pill.className = 'flex items-center justify-center my-2';
     if (isOpening) {
       pill.innerHTML = `
-        <span class="px-4 py-1 rounded-full bg-white border border-slate-200 text-xs sm:text-sm text-slate-700 font-medium shadow-xs">
+        <span class="px-4 py-1.5 rounded-full bg-white border border-slate-200 text-sm sm:text-base text-slate-700 font-medium shadow-xs text-center">
           Mở màn: <strong class="text-slate-900 font-bold">${startWord}</strong> &bull; Lượt của <strong class="text-blue-600 font-bold">@${nickname}</strong>
         </span>
       `;
     } else {
       pill.innerHTML = `
-        <span class="px-4 py-1 rounded-full bg-white border border-slate-200 text-xs sm:text-sm text-slate-700 font-medium shadow-xs">
+        <span class="px-4 py-1.5 rounded-full bg-white border border-slate-200 text-sm sm:text-base text-slate-700 font-medium shadow-xs text-center">
           Lượt của <strong class="text-blue-600 font-bold">@${nickname}</strong> &bull; Nối: <strong class="text-slate-900 font-bold">${syllable}</strong>
         </span>
       `;
@@ -884,28 +884,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const bubbleWrapper = document.createElement('div');
-    bubbleWrapper.className = `flex items-end space-x-2 my-1 ${isMe ? 'justify-end' : 'justify-start'}`;
+    bubbleWrapper.className = `flex items-end space-x-2.5 my-1.5 ${isMe ? 'justify-end' : 'justify-start'}`;
 
     if (isMe) {
       bubbleWrapper.innerHTML = `
         <div class="flex flex-col items-end max-w-[85%]">
-          <div class="chat-bubble-me px-4 py-2 rounded-2xl shadow-xs text-base sm:text-lg font-bold break-words tracking-wide">
+          <div class="chat-bubble-me px-4 py-2.5 rounded-2xl shadow-xs text-lg sm:text-xl font-black break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${timestamp || ''}</span>
+          <span class="text-xs text-slate-400 mt-1 mr-1 font-medium">${timestamp || ''}</span>
         </div>
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
-          ${renderAvatarHtml(avatar, 'w-full h-full text-sm')}
+        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-base flex-shrink-0 overflow-hidden mb-1">
+          ${renderAvatarHtml(avatar, 'w-full h-full text-base')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
-          <span class="text-xs font-semibold text-slate-500 ml-1 mb-0.5">${nickname}</span>
-          <div class="chat-bubble-other px-4 py-2 rounded-2xl text-base sm:text-lg font-bold break-words tracking-wide">
+          <span class="text-xs sm:text-sm font-bold text-slate-500 ml-1 mb-1">${nickname}</span>
+          <div class="chat-bubble-other px-4 py-2.5 rounded-2xl text-lg sm:text-xl font-black break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${timestamp || ''}</span>
+          <span class="text-xs text-slate-400 mt-1 ml-1 font-medium">${timestamp || ''}</span>
         </div>
       `;
     }
@@ -918,9 +918,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (playSound) window.soundManager.playBuzzer();
 
     const card = document.createElement('div');
-    card.className = 'flex items-center justify-center my-1.5';
+    card.className = 'flex items-center justify-center my-2';
     card.innerHTML = `
-      <span class="px-4 py-1 rounded-full bg-red-50 border border-red-200 text-xs sm:text-sm text-red-700 font-bold shadow-xs">
+      <span class="px-4 py-1.5 rounded-full bg-red-50 border border-red-200 text-sm sm:text-base text-red-700 font-bold shadow-xs text-center">
         <strong>@${nickname}</strong> bị loại: ${reason}
       </span>
     `;
@@ -931,9 +931,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderRefereeMessage({ text }) {
     const card = document.createElement('div');
-    card.className = 'flex items-center justify-center my-1.5';
+    card.className = 'flex items-center justify-center my-2';
     card.innerHTML = `
-      <span class="px-4 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs sm:text-sm font-semibold text-amber-900 shadow-xs">
+      <span class="px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-sm sm:text-base font-bold text-amber-900 shadow-xs text-center">
         ${text}
       </span>
     `;
@@ -946,28 +946,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (playSound && !isMe) window.soundManager.playMessageReceived();
 
     const bubbleWrapper = document.createElement('div');
-    bubbleWrapper.className = `flex items-end space-x-2 my-1 ${isMe ? 'justify-end' : 'justify-start'}`;
+    bubbleWrapper.className = `flex items-end space-x-2.5 my-1.5 ${isMe ? 'justify-end' : 'justify-start'}`;
 
     if (isMe) {
       bubbleWrapper.innerHTML = `
         <div class="flex flex-col items-end max-w-[85%]">
-          <div class="px-3.5 py-1.5 rounded-2xl bg-blue-500 text-white text-sm font-medium break-words">
+          <div class="px-4 py-2 rounded-2xl bg-blue-500 text-white text-base sm:text-lg font-medium break-words">
             ${text}
           </div>
-          <span class="text-[10px] text-slate-400 mt-0.5 mr-1">${timestamp || ''}</span>
+          <span class="text-xs text-slate-400 mt-0.5 mr-1">${timestamp || ''}</span>
         </div>
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs flex-shrink-0 overflow-hidden">
-          ${renderAvatarHtml(avatar, 'w-full h-full text-xs')}
+        <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden mb-1">
+          ${renderAvatarHtml(avatar, 'w-full h-full text-sm')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
-          <span class="text-[11px] font-semibold text-slate-500 ml-1">${nickname}</span>
-          <div class="px-3.5 py-1.5 rounded-2xl bg-slate-100 text-slate-800 text-sm font-medium break-words">
+          <span class="text-xs sm:text-sm font-bold text-slate-500 ml-1 mb-0.5">${nickname}</span>
+          <div class="px-4 py-2 rounded-2xl bg-slate-100 text-slate-800 text-base sm:text-lg font-medium break-words">
             ${text}
           </div>
-          <span class="text-[10px] text-slate-400 mt-0.5 ml-1">${timestamp || ''}</span>
+          <span class="text-xs text-slate-400 mt-0.5 ml-1">${timestamp || ''}</span>
         </div>
       `;
     }
@@ -999,12 +999,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Timer Paused / Resumed Alerts
   socket.on('timer_paused', ({ timeRemaining }) => {
     timerNumber.textContent = `${timeRemaining}s`;
-    timerNumber.className = 'text-xs sm:text-sm font-bold text-amber-500 font-mono animate-pulse';
+    timerNumber.className = 'text-sm sm:text-base font-bold text-amber-500 font-mono animate-pulse';
   });
 
   socket.on('timer_resumed', ({ timeRemaining }) => {
     timerNumber.textContent = `${timeRemaining}s`;
-    timerNumber.className = 'text-sm sm:text-base font-bold text-slate-800 font-mono';
+    timerNumber.className = 'text-lg sm:text-2xl font-black text-slate-800 font-mono';
   });
 
   // ================= ROUND ENDED =================
@@ -1022,14 +1022,14 @@ document.addEventListener('DOMContentLoaded', () => {
     roundLeaderboardList.innerHTML = '';
     (leaderboard || []).forEach(item => {
       const row = document.createElement('div');
-      row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs';
+      row.className = 'flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200 shadow-xs';
       row.innerHTML = `
-        <div class="flex items-center space-x-2.5 min-w-0">
-          <span class="w-6 font-bold text-center text-sm text-slate-400">#${item.rank}</span>
-          <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center">${renderAvatarHtml(item.avatar, 'w-7 h-7 text-base')}</span>
-          <span class="text-sm font-bold text-slate-800 truncate max-w-[140px]">${item.nickname}</span>
+        <div class="flex items-center space-x-3 min-w-0">
+          <span class="w-6 font-bold text-center text-base text-slate-400">#${item.rank}</span>
+          <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center">${renderAvatarHtml(item.avatar, 'w-8 h-8 text-lg')}</span>
+          <span class="text-base font-bold text-slate-800 truncate max-w-[140px]">${item.nickname}</span>
         </div>
-        <span class="text-sm font-bold text-blue-600 font-mono">${item.score} đ</span>
+        <span class="text-base font-black text-blue-600 font-mono">${item.score} đ</span>
       `;
       roundLeaderboardList.appendChild(row);
     });
@@ -1068,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1st place
     if (p1) {
-      podium1Avatar.innerHTML = renderAvatarHtml(p1.avatar, 'w-12 h-12 text-3xl');
+      podium1Avatar.innerHTML = renderAvatarHtml(p1.avatar, 'w-14 h-14 text-4xl');
       podium1Name.textContent = `@${p1.nickname}`;
       podium1Score.textContent = `${p1.score} đ`;
     } else {
@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2nd place
     if (p2) {
-      podium2Avatar.innerHTML = renderAvatarHtml(p2.avatar, 'w-10 h-10 text-2xl');
+      podium2Avatar.innerHTML = renderAvatarHtml(p2.avatar, 'w-12 h-12 text-3xl');
       podium2Name.textContent = `@${p2.nickname}`;
       podium2Score.textContent = `${p2.score} đ`;
     } else {
@@ -1090,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3rd place
     if (p3) {
-      podium3Avatar.innerHTML = renderAvatarHtml(p3.avatar, 'w-10 h-10 text-2xl');
+      podium3Avatar.innerHTML = renderAvatarHtml(p3.avatar, 'w-12 h-12 text-3xl');
       podium3Name.textContent = `@${p3.nickname}`;
       podium3Score.textContent = `${p3.score} đ`;
     } else {
@@ -1104,14 +1104,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const others = (podium || []).filter(p => p.rank > 3);
     others.forEach(p => {
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm';
+      item.className = 'flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm sm:text-base font-semibold';
       item.innerHTML = `
-        <div class="flex items-center space-x-2.5">
-          <span class="text-slate-400 font-bold">#${p.rank}</span>
-          <span class="w-6 h-6 flex items-center justify-center flex-shrink-0">${renderAvatarHtml(p.avatar, 'w-6 h-6 text-xs')}</span>
-          <span class="font-bold text-slate-700 truncate max-w-[130px]">${p.nickname}</span>
+        <div class="flex items-center space-x-3">
+          <span class="text-slate-400 font-bold text-sm">#${p.rank}</span>
+          <span class="w-7 h-7 flex items-center justify-center flex-shrink-0">${renderAvatarHtml(p.avatar, 'w-7 h-7 text-sm')}</span>
+          <span class="font-bold text-slate-700 truncate max-w-[140px]">${p.nickname}</span>
         </div>
-        <span class="font-bold text-slate-600 font-mono">${p.score} đ</span>
+        <span class="font-black text-slate-600 font-mono">${p.score} đ</span>
       `;
       podiumOtherList.appendChild(item);
     });
