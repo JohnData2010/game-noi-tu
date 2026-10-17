@@ -807,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const badge = document.createElement('div');
       const isTurn = activePlayer && p.id === activePlayer.id;
       const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
-      badge.className = `flex-shrink-0 flex items-center space-x-1.5 px-2 py-0.5 rounded-lg border text-[11px] sm:text-xs font-semibold transition-all duration-200 ${
+      badge.className = `flex-shrink-0 flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 ${
         isTurn 
           ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs ring-1 ring-blue-400/50' 
           : p.isAlive 
@@ -815,10 +815,10 @@ document.addEventListener('DOMContentLoaded', () => {
             : 'bg-red-50/70 border-red-200 text-red-400 opacity-50'
       }`;
       badge.innerHTML = `
-        <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-4 h-4 text-xs')}</span>
-        <span class="max-w-[85px] sm:max-w-[105px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
-        ${isTurn ? '<span class="text-blue-600 text-[10px] font-black animate-pulse">●</span>' : p.isAlive ? '<span class="text-emerald-500 text-[10px] font-bold">●</span>' : '<span class="text-red-500 text-[10px] font-bold">✕</span>'}
-        <span class="text-[11px] text-slate-500 font-mono font-bold">${p.score || 0}đ</span>
+        <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-4 h-4 sm:w-5 sm:h-5 text-xs sm:text-sm')}</span>
+        <span class="max-w-[95px] sm:max-w-[130px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
+        ${isTurn ? '<span class="text-blue-600 text-xs font-black animate-pulse">●</span>' : p.isAlive ? '<span class="text-emerald-500 text-xs font-bold">●</span>' : '<span class="text-red-500 text-xs font-bold">✕</span>'}
+        <span class="text-xs sm:text-sm text-slate-500 font-mono font-bold">${p.score || 0}đ</span>
       `;
       gamePlayersStrip.appendChild(badge);
     });
