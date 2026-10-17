@@ -73,22 +73,11 @@ input, select, textarea {
   display: none !important;
 }
 
-/* Snug input positioning when virtual keyboard is open */
-.keyboard-open .mobile-safe-bottom {
-  padding-bottom: 0.25rem !important;
-}
-
-.keyboard-open main {
-  padding-top: 0.25rem !important;
-  padding-bottom: 0 !important;
-  padding-left: 0.25rem !important;
-  padding-right: 0.25rem !important;
-}
-
-.keyboard-open #viewGame {
-  border-bottom-left-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  border-bottom: none !important;
+/* Snug input positioning when virtual keyboard is open on small mobile devices */
+@media (max-width: 640px) {
+  .keyboard-open .mobile-safe-bottom {
+    padding-bottom: 0.25rem !important;
+  }
 }
 
 /* Smooth momentum scrolling for chat feed */

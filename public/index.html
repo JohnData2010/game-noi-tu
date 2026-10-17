@@ -251,32 +251,23 @@
     <section id="viewGame" class="hidden flex-1 min-h-0 flex flex-col overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm relative">
       
       <!-- Top Game Status Bar (Streamlined, Compact, High-Contrast) -->
-      <div class="bg-white border-b border-slate-200 px-3 py-2 sm:px-4 sm:py-2.5 z-10 flex-shrink-0 space-y-1.5">
-        
-        <!-- Main Info Row: Target Word + Timer -->
-        <div class="flex items-center justify-between gap-2">
-          <!-- Current Word & Target Syllable -->
-          <div class="flex items-center space-x-2 min-w-0">
-            <span id="roundBadge" class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md text-[11px] font-bold flex-shrink-0">Hiệp 1/3</span>
-            <div class="flex items-center space-x-1.5 sm:space-x-2 truncate">
-              <span id="currentWordDisplay" class="text-base sm:text-lg font-bold text-slate-800 truncate tracking-tight">học sinh</span>
-              <span class="text-slate-400 font-bold text-xs sm:text-sm">➔</span>
-              <span id="expectedSyllableDisplay" class="text-base sm:text-lg font-extrabold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md tracking-tight flex-shrink-0">sinh</span>
-            </div>
-          </div>
-
-          <!-- Compact Timer Pill -->
-          <div id="timerBox" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-mono text-xs sm:text-sm font-bold flex-shrink-0 transition-colors">
-            <i data-lucide="timer" class="w-3.5 h-3.5 text-slate-500"></i>
-            <span id="timerNumber">15s</span>
-          </div>
+      <div class="bg-white border-b border-slate-200 px-3 py-2 z-10 flex-shrink-0 flex items-center justify-between gap-2">
+        <!-- Round badge and players list -->
+        <div class="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
+          <span id="roundBadge" class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-lg text-xs font-bold flex-shrink-0">Hiệp 1/3</span>
+          <div id="gamePlayersStrip" class="flex items-center space-x-1.5 overflow-x-auto py-0.5 scrollbar-none"></div>
         </div>
 
-        <!-- Players Strip -->
-        <div id="gamePlayersStrip" class="flex items-center space-x-1.5 overflow-x-auto py-0.5 scrollbar-none"></div>
+        <!-- Compact Timer Pill (hidden if unlimited) -->
+        <div id="timerBox" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-mono text-xs sm:text-sm font-bold flex-shrink-0 transition-colors">
+          <i data-lucide="timer" class="w-3.5 h-3.5 text-slate-500"></i>
+          <span id="timerNumber">15s</span>
+        </div>
 
         <!-- Hidden Compatibility Anchors for Existing Scripts -->
         <div class="hidden">
+          <span id="currentWordDisplay">học sinh</span>
+          <span id="expectedSyllableDisplay">sinh</span>
           <div id="activePlayerBadge">
             <span id="activePlayerAvatar"></span>
             <span id="activePlayerName"></span>
@@ -286,12 +277,11 @@
             <span id="typingText"></span>
           </div>
         </div>
+      </div>
 
-        <!-- Ultra-thin Dynamic Timer Progress Line -->
-        <div id="timerProgressWrapper" class="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-          <div id="timerProgressBar" class="h-full bg-blue-600 transition-all duration-300" style="width: 100%;"></div>
-        </div>
-
+      <!-- Ultra-thin Dynamic Timer Progress Line -->
+      <div id="timerProgressWrapper" class="hidden w-full h-1 bg-slate-100 overflow-hidden flex-shrink-0">
+        <div id="timerProgressBar" class="h-full bg-blue-600 transition-all duration-300" style="width: 100%;"></div>
       </div>
 
       <!-- Messenger Chat Feed -->

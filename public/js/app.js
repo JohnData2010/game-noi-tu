@@ -167,11 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
     rootStyle.setProperty('--vv-top', `${totalOffset}px`);
     rootStyle.setProperty('--vvh', `${height}px`);
 
-    // Detect if virtual keyboard is open
-    const isInputActive = document.activeElement && 
-      (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
-    const isHeightShrunk = vv ? (window.innerHeight - vv.height > 60) : false;
-    const isKeyboardOpen = isInputActive || isHeightShrunk || totalOffset > 0;
+    // Detect if virtual keyboard is open on small mobile devices only
+    const isSmallScreen = window.innerWidth <= 768;
+    const isHeightShrunk = vv ? (window.innerHeight - vv.height > 120) : false;
+    const isKeyboardOpen = isSmallScreen && isHeightShrunk;
     document.body.classList.toggle('keyboard-open', isKeyboardOpen);
 
     // Keep chat scrolled to bottom when keyboard is open
@@ -193,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
   [inputWord, inputNickname, inputRoomCode].forEach(input => {
     if (!input) return;
     input.addEventListener('focus', () => {
-      document.body.classList.add('keyboard-open');
       updateViewport();
       // Counter Safari's native scroll animation across multiple frames
       [30, 80, 150, 300].forEach(delay => {
@@ -792,10 +790,21 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-4 h-4 text-xs')}</span>
         <span class="max-w-[85px] sm:max-w-[105px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
         ${isTurn ? '<span class="text-blue-600 text-[10px] font-black animate-pulse">●</span>' : p.isAlive ? '<span class="text-emerald-500 text-[10px] font-bold">●</span>' : '<span class="text-red-500 text-[10px] font-bold">✕</span>'}
-        <span class="text-[11px] text-slate-400 font-mono font-medium">(${p.score || 0})</span>
+        <span class="text-[11px] text-slate-500 font-mono font-bold">${p.score || 0}đ</span>
       `;
       gamePlayersStrip.appendChild(badge);
     });
+
+    // Hide timer elements immediately if room has no timer
+    const hasTimer = room.hasTimer !== false && room.turnDuration && room.turnDuration > 0;
+    if (!hasTimer) {
+      if (timerBox) {
+        timerBox.classList.add('hidden');
+        timerBox.classList.remove('flex');
+      }
+      const timerProgressWrapper = document.getElementById('timerProgressWrapper');
+      if (timerProgressWrapper) timerProgressWrapper.classList.add('hidden');
+    }
 
     // Control input box availability & Prefix pill (ONLY show prefix on MY turn)
     const isMyTurn = activePlayer && (activePlayer.id === myId || (activePlayer.sessionToken && activePlayer.sessionToken === mySessionToken)) && me && me.isAlive;
@@ -837,26 +846,32 @@ document.addEventListener('DOMContentLoaded', () => {
   socket.on('timer_tick', ({ timeRemaining, totalDuration, isUnlimited }) => {
     const timerProgressWrapper = document.getElementById('timerProgressWrapper');
     if (isUnlimited || totalDuration === 0) {
-      timerNumber.textContent = '∞';
-      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 font-mono text-sm sm:text-base font-black transition-colors';
+      if (timerBox) {
+        timerBox.classList.add('hidden');
+        timerBox.classList.remove('flex');
+      }
       if (timerProgressWrapper) timerProgressWrapper.classList.add('hidden');
       return;
     }
 
+    if (timerBox) {
+      timerBox.classList.remove('hidden');
+      timerBox.classList.add('flex');
+    }
     if (timerProgressWrapper) timerProgressWrapper.classList.remove('hidden');
     timerNumber.textContent = `${timeRemaining}s`;
     const pct = Math.max(0, Math.min(100, (timeRemaining / totalDuration) * 100));
     timerProgressBar.style.width = `${pct}%`;
 
     if (timeRemaining <= 4) {
-      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-red-50 border-2 border-red-500 text-red-600 font-mono text-sm sm:text-base font-black timer-critical transition-colors';
+      timerBox.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-red-50 border-2 border-red-500 text-red-600 font-mono text-xs sm:text-sm font-bold timer-critical transition-colors';
       timerProgressBar.className = 'h-full bg-red-500 transition-all duration-300';
       window.soundManager.playTick();
     } else if (timeRemaining <= 7) {
-      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-400 text-amber-700 font-mono text-sm sm:text-base font-black transition-colors';
+      timerBox.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-400 text-amber-700 font-mono text-xs sm:text-sm font-bold transition-colors';
       timerProgressBar.className = 'h-full bg-amber-500 transition-all duration-300';
     } else {
-      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-mono text-sm sm:text-base font-black transition-colors';
+      timerBox.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-mono text-xs sm:text-sm font-bold transition-colors';
       timerProgressBar.className = 'h-full bg-blue-600 transition-all duration-300';
     }
   });
@@ -888,20 +903,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const bubbleWrapper = document.createElement('div');
     bubbleWrapper.className = `flex items-end space-x-2 my-1 animate-fadeIn ${isMe ? 'justify-end' : 'justify-start'}`;
 
-    const formattedTime = timestamp || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-
     if (isMe) {
       bubbleWrapper.innerHTML = `
         <div class="flex flex-col items-end max-w-[85%]">
           <div class="chat-bubble-me px-3.5 py-1.5 text-sm sm:text-base font-bold break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
         </div>
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden mb-2">
+        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden mb-1">
           ${renderAvatarHtml(avatar, 'w-full h-full text-sm')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
@@ -909,7 +921,6 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="chat-bubble-other px-3.5 py-1.5 text-sm sm:text-base font-bold break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
         </div>
       `;
     }
@@ -953,14 +964,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function renderChatBubble({ senderId, nickname, avatar, text, timestamp }, playSound = true) {
+  function renderChatBubble({ senderId, nickname, avatar, text }, playSound = true) {
     const isMe = senderId === myId;
     if (playSound && !isMe) window.soundManager.playMessageReceived();
 
     const bubbleWrapper = document.createElement('div');
     bubbleWrapper.className = `flex items-end space-x-2 my-1 animate-fadeIn ${isMe ? 'justify-end' : 'justify-start'}`;
-
-    const formattedTime = timestamp || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
     if (isMe) {
       bubbleWrapper.innerHTML = `
@@ -968,7 +977,6 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="px-3 py-1.5 rounded-2xl bg-blue-600 text-white text-xs sm:text-sm font-medium break-words">
             ${text}
           </div>
-          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
         </div>
       `;
     } else {
@@ -981,7 +989,6 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="px-3 py-1.5 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 text-xs sm:text-sm font-medium break-words">
             ${text}
           </div>
-          <span class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
         </div>
       `;
     }
