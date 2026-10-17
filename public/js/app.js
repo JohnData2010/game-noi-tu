@@ -601,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (prefix) {
       const parts = rawInput.split(' ');
-      if (parts.length >= 2 && parts[0] === prefix) {
+      if (parts.length === 2 && parts[0] === prefix) {
         fullWord = `${parts[0]} ${parts[1]}`;
       } else if (parts.length === 1 && parts[0] === prefix) {
         showToast('Vui lòng nhập thêm tiếng thứ 2!', 'warning');
@@ -619,9 +619,9 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.emit('submit_word', fullWord.normalize('NFC'));
     inputWord.value = '';
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       chatFeed.scrollTop = chatFeed.scrollHeight;
-    }, 50);
+    });
   });
 
   // ================= MODAL ACTIONS =================
@@ -772,8 +772,38 @@ document.addEventListener('DOMContentLoaded', () => {
         : `Hiệp ${room.roundNumber || 1}/${room.maxRounds || 3}`;
     }
 
-    // Show locked prefix in input bar
-    if (room.expectedSyllable) {
+    const activePlayer = room.players[room.turnIndex];
+    if (activePlayer) {
+      if (activePlayerAvatar) activePlayerAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-5 h-5 text-sm');
+      if (activePlayerName) activePlayerName.textContent = `@${activePlayer.nickname}`;
+    }
+
+    // Mini streamlined players strip
+    gamePlayersStrip.innerHTML = '';
+    room.players.forEach(p => {
+      const badge = document.createElement('div');
+      const isTurn = activePlayer && p.id === activePlayer.id;
+      const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
+      badge.className = `flex-shrink-0 flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 ${
+        isTurn 
+          ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs ring-2 ring-blue-400/50' 
+          : p.isAlive 
+            ? 'bg-slate-50 border-slate-200 text-slate-700' 
+            : 'bg-red-50/70 border-red-200 text-red-400 opacity-50'
+      }`;
+      badge.innerHTML = `
+        <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-4 h-4 sm:w-5 sm:h-5 text-sm')}</span>
+        <span class="max-w-[85px] sm:max-w-[105px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
+        ${isTurn ? '<span class="text-blue-600 text-xs font-black animate-pulse">●</span>' : p.isAlive ? '<span class="text-emerald-500 text-xs font-bold">●</span>' : '<span class="text-red-500 text-xs font-bold">✕</span>'}
+        <span class="text-xs text-slate-400 font-mono font-bold">(${p.score || 0})</span>
+      `;
+      gamePlayersStrip.appendChild(badge);
+    });
+
+    // Control input box availability & Prefix pill (ONLY show prefix on MY turn)
+    const isMyTurn = activePlayer && (activePlayer.id === myId || (activePlayer.sessionToken && activePlayer.sessionToken === mySessionToken)) && me && me.isAlive;
+    
+    if (isMyTurn && room.expectedSyllable) {
       inputPrefixBadge.classList.remove('hidden');
       inputPrefixBadge.classList.add('flex');
       inputPrefixText.textContent = room.expectedSyllable;
@@ -782,40 +812,10 @@ document.addEventListener('DOMContentLoaded', () => {
       inputPrefixBadge.classList.remove('flex');
     }
 
-    const activePlayer = room.players[room.turnIndex];
-    if (activePlayer) {
-      activePlayerAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-6 h-6 text-base');
-      activePlayerName.textContent = `@${activePlayer.nickname}`;
-    }
-
-    // Mini status strip
-    gamePlayersStrip.innerHTML = '';
-    room.players.forEach(p => {
-      const badge = document.createElement('div');
-      const isTurn = activePlayer && p.id === activePlayer.id;
-      const isMe = p.id === myId || (p.sessionToken && p.sessionToken === mySessionToken);
-      badge.className = `flex-shrink-0 flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-sm sm:text-base font-bold transition ${
-        isTurn 
-          ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' 
-          : p.isAlive 
-            ? 'bg-slate-50 border-slate-200 text-slate-700' 
-            : 'bg-red-50 border-red-200 text-red-500 opacity-60'
-      }`;
-      badge.innerHTML = `
-        <span class="flex-shrink-0 flex items-center justify-center">${renderAvatarHtml(p.avatar, 'w-5 h-5 text-sm')}</span>
-        <span class="max-w-[105px] truncate">${p.nickname}${isMe ? ' (Bạn)' : ''}</span>
-        ${p.isAlive ? '<span class="text-emerald-500 text-xs font-bold">●</span>' : '<span class="text-red-500 text-xs font-bold">×</span>'}
-        <span class="text-xs sm:text-sm text-slate-400 font-mono font-bold">(${p.score})</span>
-      `;
-      gamePlayersStrip.appendChild(badge);
-    });
-
-    // Control input box availability (CLEAN, NO EXAMPLES)
-    const isMyTurn = activePlayer && (activePlayer.id === myId || (activePlayer.sessionToken && activePlayer.sessionToken === mySessionToken)) && me && me.isAlive;
     if (isMyTurn) {
       inputWord.disabled = false;
       btnSendWord.disabled = false;
-      inputWord.placeholder = 'Nhập từ...';
+      inputWord.placeholder = 'Gõ tiếng tiếp theo (hoặc cả từ)...';
       if (document.activeElement !== inputWord) {
         try {
           inputWord.focus({ preventScroll: true });
@@ -823,76 +823,62 @@ document.addEventListener('DOMContentLoaded', () => {
           inputWord.focus();
         }
       }
-      typingIndicator.classList.add('hidden');
     } else {
       inputWord.disabled = true;
       btnSendWord.disabled = true;
       if (me && !me.isAlive) {
-        inputWord.placeholder = 'Bạn đã bị loại';
+        inputWord.placeholder = 'Bạn đã bị loại khỏi ván đấu';
       } else if (activePlayer) {
-        inputWord.placeholder = `Chờ lượt ${activePlayer.nickname}...`;
-      }
-
-      if (activePlayer && room.status === 'playing') {
-        typingAvatar.innerHTML = renderAvatarHtml(activePlayer.avatar, 'w-6 h-6 text-base');
-        typingText.textContent = `${activePlayer.nickname} đang suy nghĩ...`;
-        typingIndicator.classList.remove('hidden');
+        inputWord.placeholder = `Chờ lượt @${activePlayer.nickname}...`;
       } else {
-        typingIndicator.classList.add('hidden');
+        inputWord.placeholder = 'Đang chờ...';
       }
     }
   }
 
-  // Timer Tick Event
+  // Timer Tick Event (Compact Pill & Thin Progress Line)
   socket.on('timer_tick', ({ timeRemaining, totalDuration, isUnlimited }) => {
+    const timerProgressWrapper = document.getElementById('timerProgressWrapper');
     if (isUnlimited || totalDuration === 0) {
       timerNumber.textContent = '∞';
-      timerNumber.className = 'text-xl sm:text-2xl font-black text-slate-400 font-mono';
-      timerProgressBar.style.width = '100%';
-      timerProgressBar.className = 'h-full bg-slate-200 transition-all duration-300';
-      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-colors duration-300';
+      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 font-mono text-sm sm:text-base font-black transition-colors';
+      if (timerProgressWrapper) timerProgressWrapper.classList.add('hidden');
       return;
     }
 
-    timerNumber.textContent = timeRemaining;
+    if (timerProgressWrapper) timerProgressWrapper.classList.remove('hidden');
+    timerNumber.textContent = `${timeRemaining}s`;
     const pct = Math.max(0, Math.min(100, (timeRemaining / totalDuration) * 100));
     timerProgressBar.style.width = `${pct}%`;
 
     if (timeRemaining <= 4) {
-      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-red-50 border-2 border-red-500 flex items-center justify-center timer-critical transition-colors duration-300';
-      timerNumber.className = 'text-lg sm:text-2xl font-black text-red-600 font-mono';
+      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-red-50 border-2 border-red-500 text-red-600 font-mono text-sm sm:text-base font-black timer-critical transition-colors';
       timerProgressBar.className = 'h-full bg-red-500 transition-all duration-300';
       window.soundManager.playTick();
     } else if (timeRemaining <= 7) {
-      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-50 border-2 border-amber-500 flex items-center justify-center transition-colors duration-300';
-      timerNumber.className = 'text-lg sm:text-2xl font-black text-amber-600 font-mono';
+      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-400 text-amber-700 font-mono text-sm sm:text-base font-black transition-colors';
       timerProgressBar.className = 'h-full bg-amber-500 transition-all duration-300';
     } else {
-      timerBox.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center transition-colors duration-300';
-      timerNumber.className = 'text-lg sm:text-2xl font-black text-slate-800 font-mono';
+      timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-mono text-sm sm:text-base font-black transition-colors';
       timerProgressBar.className = 'h-full bg-blue-600 transition-all duration-300';
     }
   });
 
   // Helper renderers for chat feed messages
   function renderTurnAnnouncement({ nickname, avatar, syllable, startWord, isOpening }) {
+    if (!isOpening) return; // Suppress repetitive mid-game banners from flooding the feed!
     const pill = document.createElement('div');
-    pill.className = 'flex items-center justify-center my-2';
-    if (isOpening) {
-      pill.innerHTML = `
-        <span class="px-4 py-1.5 rounded-full bg-white border border-slate-200 text-sm sm:text-base text-slate-700 font-medium shadow-xs text-center">
-          Mở màn: <strong class="text-slate-900 font-bold">${startWord}</strong> &bull; Lượt của <strong class="text-blue-600 font-bold">@${nickname}</strong>
-        </span>
-      `;
-    } else {
-      pill.innerHTML = `
-        <span class="px-4 py-1.5 rounded-full bg-white border border-slate-200 text-sm sm:text-base text-slate-700 font-medium shadow-xs text-center">
-          Lượt của <strong class="text-blue-600 font-bold">@${nickname}</strong> &bull; Nối: <strong class="text-slate-900 font-bold">${syllable}</strong>
-        </span>
-      `;
-    }
+    pill.className = 'flex items-center justify-center my-2 animate-fadeIn';
+    pill.innerHTML = `
+      <div class="px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs sm:text-sm text-blue-900 font-bold shadow-xs text-center flex items-center space-x-1.5">
+        <span class="text-blue-600">🎯</span>
+        <span>Mở màn: <strong class="text-blue-950 font-black">${startWord}</strong> &bull; Lượt đầu: <strong class="text-blue-700 font-black">@${nickname}</strong></span>
+      </div>
+    `;
     chatFeed.appendChild(pill);
-    chatFeed.scrollTop = chatFeed.scrollHeight;
+    requestAnimationFrame(() => {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    });
   }
 
   function renderPlayerMessage({ playerId, nickname, avatar, word, timestamp }, playSound = true) {
@@ -903,61 +889,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const bubbleWrapper = document.createElement('div');
-    bubbleWrapper.className = `flex items-end space-x-2.5 my-1.5 ${isMe ? 'justify-end' : 'justify-start'}`;
+    bubbleWrapper.className = `flex items-end space-x-2 my-1 animate-fadeIn ${isMe ? 'justify-end' : 'justify-start'}`;
+
+    const formattedTime = timestamp || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
     if (isMe) {
       bubbleWrapper.innerHTML = `
         <div class="flex flex-col items-end max-w-[85%]">
-          <div class="chat-bubble-me px-4 py-2.5 rounded-2xl shadow-xs text-lg sm:text-xl font-black break-words tracking-wide">
+          <div class="chat-bubble-me px-4 py-2 text-lg sm:text-xl font-black break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-xs text-slate-400 mt-1 mr-1 font-medium">${timestamp || ''}</span>
+          <span class="text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
         </div>
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-base flex-shrink-0 overflow-hidden mb-1">
+        <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-base flex-shrink-0 overflow-hidden mb-3">
           ${renderAvatarHtml(avatar, 'w-full h-full text-base')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
-          <span class="text-xs sm:text-sm font-bold text-slate-500 ml-1 mb-1">${nickname}</span>
-          <div class="chat-bubble-other px-4 py-2.5 rounded-2xl text-lg sm:text-xl font-black break-words tracking-wide">
+          <span class="text-xs font-bold text-slate-500 ml-1 mb-0.5">${nickname}</span>
+          <div class="chat-bubble-other px-4 py-2 text-lg sm:text-xl font-black break-words tracking-wide">
             ${word}
           </div>
-          <span class="text-xs text-slate-400 mt-1 ml-1 font-medium">${timestamp || ''}</span>
+          <span class="text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
         </div>
       `;
     }
 
     chatFeed.appendChild(bubbleWrapper);
-    chatFeed.scrollTop = chatFeed.scrollHeight;
+    requestAnimationFrame(() => {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    });
   }
 
   function renderEliminationMessage({ playerId, nickname, avatar, reason }, playSound = true) {
     if (playSound) window.soundManager.playBuzzer();
 
     const card = document.createElement('div');
-    card.className = 'flex items-center justify-center my-2';
+    card.className = 'flex items-center justify-center my-2 animate-fadeIn';
     card.innerHTML = `
-      <span class="px-4 py-1.5 rounded-full bg-red-50 border border-red-200 text-sm sm:text-base text-red-700 font-bold shadow-xs text-center">
-        <strong>@${nickname}</strong> bị loại: ${reason}
-      </span>
+      <div class="px-3.5 py-1.5 rounded-full bg-red-50 border border-red-200 text-xs sm:text-sm text-red-700 font-bold shadow-xs text-center flex items-center space-x-1.5">
+        <span class="text-red-500 font-black">✕</span>
+        <span><strong>@${nickname}</strong> bị loại: ${reason}</span>
+      </div>
     `;
 
     chatFeed.appendChild(card);
-    chatFeed.scrollTop = chatFeed.scrollHeight;
+    requestAnimationFrame(() => {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    });
   }
 
   function renderRefereeMessage({ text }) {
     const card = document.createElement('div');
-    card.className = 'flex items-center justify-center my-2';
+    card.className = 'flex items-center justify-center my-2 animate-fadeIn';
     card.innerHTML = `
-      <span class="px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-sm sm:text-base font-bold text-amber-900 shadow-xs text-center">
-        ${text}
-      </span>
+      <div class="px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-xs sm:text-sm font-bold text-amber-900 shadow-xs text-center flex items-center space-x-1.5">
+        <span>⚠️</span>
+        <span>${text}</span>
+      </div>
     `;
     chatFeed.appendChild(card);
-    chatFeed.scrollTop = chatFeed.scrollHeight;
+    requestAnimationFrame(() => {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    });
   }
 
   function renderChatBubble({ senderId, nickname, avatar, text, timestamp }, playSound = true) {
@@ -965,7 +961,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (playSound && !isMe) window.soundManager.playMessageReceived();
 
     const bubbleWrapper = document.createElement('div');
-    bubbleWrapper.className = `flex items-end space-x-2.5 my-1.5 ${isMe ? 'justify-end' : 'justify-start'}`;
+    bubbleWrapper.className = `flex items-end space-x-2 my-1 animate-fadeIn ${isMe ? 'justify-end' : 'justify-start'}`;
+
+    const formattedTime = timestamp || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
     if (isMe) {
       bubbleWrapper.innerHTML = `
@@ -973,25 +971,27 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="px-4 py-2 rounded-2xl bg-blue-500 text-white text-base sm:text-lg font-medium break-words">
             ${text}
           </div>
-          <span class="text-xs text-slate-400 mt-0.5 mr-1">${timestamp || ''}</span>
+          <span class="text-[11px] text-slate-400 mt-0.5 mr-1 font-medium">${formattedTime}</span>
         </div>
       `;
     } else {
       bubbleWrapper.innerHTML = `
-        <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden mb-1">
+        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden mb-1">
           ${renderAvatarHtml(avatar, 'w-full h-full text-sm')}
         </div>
         <div class="flex flex-col items-start max-w-[85%]">
-          <span class="text-xs sm:text-sm font-bold text-slate-500 ml-1 mb-0.5">${nickname}</span>
-          <div class="px-4 py-2 rounded-2xl bg-slate-100 text-slate-800 text-base sm:text-lg font-medium break-words">
+          <span class="text-xs font-bold text-slate-500 ml-1 mb-0.5">${nickname}</span>
+          <div class="px-4 py-2 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 text-base sm:text-lg font-medium break-words">
             ${text}
           </div>
-          <span class="text-xs text-slate-400 mt-0.5 ml-1">${timestamp || ''}</span>
+          <span class="text-[11px] text-slate-400 mt-0.5 ml-1 font-medium">${formattedTime}</span>
         </div>
       `;
     }
     chatFeed.appendChild(bubbleWrapper);
-    chatFeed.scrollTop = chatFeed.scrollHeight;
+    requestAnimationFrame(() => {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    });
   }
 
   // Socket Events for Chat and Gameplay Messages
@@ -1007,23 +1007,25 @@ document.addEventListener('DOMContentLoaded', () => {
     chatFeed.innerHTML = '';
     history.forEach(item => {
       if (item.type === 'player_message') renderPlayerMessage(item.data, false);
-      else if (item.type === 'turn_announcement') renderTurnAnnouncement(item.data);
+      else if (item.type === 'turn_announcement' && item.data?.isOpening) renderTurnAnnouncement(item.data);
       else if (item.type === 'referee_message') renderRefereeMessage(item.data);
       else if (item.type === 'player_eliminated') renderEliminationMessage(item.data, false);
       else if (item.type === 'chat_bubble') renderChatBubble(item.data, false);
     });
-    chatFeed.scrollTop = chatFeed.scrollHeight;
+    requestAnimationFrame(() => {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    });
   });
 
   // Timer Paused / Resumed Alerts
   socket.on('timer_paused', ({ timeRemaining }) => {
-    timerNumber.textContent = `${timeRemaining}s`;
-    timerNumber.className = 'text-sm sm:text-base font-bold text-amber-500 font-mono animate-pulse';
+    timerNumber.textContent = `${timeRemaining}s ⏸`;
+    timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-300 text-amber-700 font-mono text-sm sm:text-base font-black animate-pulse';
   });
 
   socket.on('timer_resumed', ({ timeRemaining }) => {
     timerNumber.textContent = `${timeRemaining}s`;
-    timerNumber.className = 'text-lg sm:text-2xl font-black text-slate-800 font-mono';
+    timerBox.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-mono text-sm sm:text-base font-black';
   });
 
   // ================= ROUND ENDED =================
