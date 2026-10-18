@@ -69,7 +69,7 @@ class Referee {
     // Rule 2: Must connect with the expected syllable from previous turn
     if (expectedSyllable) {
       const normalizedExpected = dictionary.normalize(expectedSyllable);
-      if (head !== normalizedExpected) {
+      if (!dictionary.areSyllablesMatching(head, normalizedExpected)) {
         return {
           valid: false,
           word: cleanWord,
@@ -81,8 +81,9 @@ class Referee {
       }
     }
 
-    // Rule 3: Word cannot be repeated in the same game
-    if (usedWords.has(cleanWord)) {
+    // Rule 3: Word cannot be repeated in the same game (including orthographic variants)
+    const [wordNew, wordOld] = dictionary.getDualVariants(cleanWord);
+    if (usedWords.has(cleanWord) || usedWords.has(wordNew) || usedWords.has(wordOld)) {
       return {
         valid: false,
         word: cleanWord,

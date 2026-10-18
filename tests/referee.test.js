@@ -118,4 +118,35 @@ const test19 = referee.validate(nfdTrongCay, 'trồng', new Set());
 assert.strictEqual(test19.valid, true, 'Should accept decomposed NFD input from mobile keyboards');
 console.log('✓ Accepts decomposed NFD "trồng cây" from iOS/mobile keyboards');
 
+// Test 10: Comprehensive Dual Orthography & "khóa học" / "khoá học"
+const testKhoaHoc1 = referee.validate('khóa học', 'khóa', new Set());
+assert.strictEqual(testKhoaHoc1.valid, true, 'Should accept "khóa học" after "khóa"');
+console.log('✓ Accepts "khóa học" after modern "khóa"');
+
+const testKhoaHoc2 = referee.validate('khóa học', 'khoá', new Set());
+assert.strictEqual(testKhoaHoc2.valid, true, 'Should accept "khóa học" after traditional "khoá"');
+console.log('✓ Accepts "khóa học" after traditional "khoá"');
+
+const testKhoaHoc3 = referee.validate('khoá học', 'khóa', new Set());
+assert.strictEqual(testKhoaHoc3.valid, true, 'Should accept "khoá học" after modern "khóa"');
+console.log('✓ Accepts "khoá học" after modern "khóa"');
+
+const testKhoaHoc4 = referee.validate('khoá học', 'khoá', new Set());
+assert.strictEqual(testKhoaHoc4.valid, true, 'Should accept "khoá học" after traditional "khoá"');
+console.log('✓ Accepts "khoá học" after traditional "khoá"');
+
+const testToaNha = referee.validate('toà nhà', 'toà', new Set());
+assert.strictEqual(testToaNha.valid, true, 'Should accept traditional "toà nhà"');
+const testToaNhaModern = referee.validate('tòa nhà', 'tòa', new Set());
+assert.strictEqual(testToaNhaModern.valid, true, 'Should accept modern "tòa nhà"');
+console.log('✓ Accepts both "tòa nhà" and "toà nhà" seamlessly');
+
+const testThuyTrieu = referee.validate('thủy triều', 'thuỷ', new Set());
+assert.strictEqual(testThuyTrieu.valid, true, 'Should cross-match "thủy" with "thuỷ"');
+console.log('✓ Cross-matches "thủy" with "thuỷ"');
+
+const testDupOrthography = referee.validate('khoá học', 'khoá', new Set(['khóa học']));
+assert.strictEqual(testDupOrthography.valid, false, 'Should reject "khoá học" when "khóa học" was already used');
+console.log('✓ Rejects orthographic duplicate "khoá học" when "khóa học" was already played');
+
 console.log('All Referee tests passed successfully! 🎉');
