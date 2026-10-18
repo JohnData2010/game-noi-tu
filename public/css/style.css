@@ -1,8 +1,7 @@
 /* Clean, Minimalist Light Theme for Game Nối Từ - Popular App Style */
 
 :root {
-  --vv-height: 100%;
-  --vv-top: 0px;
+  --vv-height: 100dvh;
 }
 
 html, body {
@@ -32,10 +31,10 @@ input, select, textarea {
   touch-action: manipulation;
 }
 
-/* Fixed app layout locked to the exact visual viewport */
+/* Fixed app layout locked to the exact visual viewport from the top */
 .app-layout {
   position: fixed;
-  top: var(--vv-top, 0px);
+  top: 0;
   left: 0;
   right: 0;
   width: 100%;
@@ -45,7 +44,7 @@ input, select, textarea {
   overflow: hidden;
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
-  will-change: height, top;
+  will-change: height;
 }
 
 /* Top header extends smoothly under notch on iOS */
@@ -61,6 +60,9 @@ header {
 @media (max-width: 640px) {
   .keyboard-open .mobile-safe-bottom {
     padding-bottom: 0.25rem !important;
+  }
+  .keyboard-open main {
+    padding: 0.25rem !important;
   }
 }
 

@@ -185,13 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
       lastWindowWidth = window.innerWidth;
     }
 
-    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    const vvOffset = vv ? (vv.offsetTop || 0) : 0;
-    const totalOffset = vvOffset + scrollY;
-
     rootStyle.setProperty('--vv-height', `${height}px`);
-    rootStyle.setProperty('--vv-top', `${totalOffset}px`);
     rootStyle.setProperty('--vvh', `${height}px`);
+
+    // Lock page scroll at top (0,0) so iOS Safari doesn't scroll/pan fixed layout
+    if (window.scrollY !== 0 || document.body.scrollTop !== 0 || document.documentElement.scrollTop !== 0) {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
 
     // Detect if virtual keyboard is open on small mobile devices (Android & iOS)
     const isSmallScreen = window.innerWidth <= 768;
@@ -225,13 +227,24 @@ document.addEventListener('DOMContentLoaded', () => {
   [inputWord, inputNickname, inputRoomCode].forEach(input => {
     if (!input) return;
     input.addEventListener('focus', () => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
       updateViewport();
-      setTimeout(updateViewport, 120);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        updateViewport();
+      }, 100);
+      setTimeout(() => {
+        if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+      }, 250);
     });
 
     input.addEventListener('blur', () => {
       setTimeout(() => {
-        if (window.scrollY !== 0) window.scrollTo(0, 0);
+        window.scrollTo(0, 0);
         document.body.scrollTop = 0;
         document.documentElement.scrollTop = 0;
         updateViewport();
@@ -574,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (navRoomBadge) navRoomBadge.addEventListener('click', shareRoomNative);
 
   btnShowQrCode.addEventListener('click', () => {
+    if (document.activeElement) document.activeElement.blur();
     if (!currentRoom) return;
     const shareUrl = getMobileRoomLink();
     qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(shareUrl)}`;
@@ -640,6 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Custom Leave Confirmation Modal (Replaces native browser confirm on mobile)
   function openConfirmLeaveModal() {
+    if (document.activeElement) document.activeElement.blur();
     window.soundManager.playPop();
     if (modalConfirmLeave) modalConfirmLeave.classList.remove('hidden');
   }
@@ -738,7 +753,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ================= MODAL ACTIONS =================
-  btnOpenRules.addEventListener('click', () => modalRules.classList.remove('hidden'));
+  btnOpenRules.addEventListener('click', () => {
+    if (document.activeElement) document.activeElement.blur();
+    modalRules.classList.remove('hidden');
+  });
   btnCloseRules.addEventListener('click', () => modalRules.classList.add('hidden'));
   btnAcknowledgeRules.addEventListener('click', () => modalRules.classList.add('hidden'));
 
@@ -1043,8 +1061,9 @@ document.addEventListener('DOMContentLoaded', () => {
       inputWord.disabled = false;
       btnSendWord.disabled = false;
       inputWord.placeholder = 'Gõ tiếng tiếp theo (hoặc cả từ)...';
-      // Only auto-focus once upon turn start, and only if no modal is active
-      if (isNewTurnForMe && document.activeElement !== inputWord) {
+      // Only auto-focus once upon turn start on desktop devices without touch to prevent jarring iOS keyboard popup
+      const isTouchOrMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 768);
+      if (isNewTurnForMe && !isTouchOrMobile && document.activeElement !== inputWord) {
         const isModalOpen = (modalRules && !modalRules.classList.contains('hidden')) ||
                             (modalConfirmLeave && !modalConfirmLeave.classList.contains('hidden')) ||
                             (modalQrCode && !modalQrCode.classList.contains('hidden'));
@@ -1348,11 +1367,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnRoundReturnLobby) btnRoundReturnLobby.classList.add('hidden');
     }
 
+    if (document.activeElement) document.activeElement.blur();
     modalRoundEnd.classList.remove('hidden');
   });
 
   // ================= MATCH FINISHED / PODIUM =================
   socket.on('match_finished', ({ podium, totalRounds }) => {
+    if (document.activeElement) document.activeElement.blur();
     modalRoundEnd.classList.add('hidden');
     window.soundManager.playVictory();
     spawnConfetti();
