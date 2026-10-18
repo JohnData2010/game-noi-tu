@@ -4,6 +4,7 @@ class SoundManager {
     this.enabled = true;
     this.ctx = null;
     this.unlockMobileAudio();
+    this.handleVisibility();
   }
 
   unlockMobileAudio() {
@@ -18,23 +19,32 @@ class SoundManager {
           source.start(0);
         }
       } catch (e) {}
-      document.removeEventListener('touchstart', unlock, true);
-      document.removeEventListener('touchend', unlock, true);
-      document.removeEventListener('click', unlock, true);
     };
 
-    document.addEventListener('touchstart', unlock, true);
-    document.addEventListener('touchend', unlock, true);
-    document.addEventListener('click', unlock, true);
+    document.addEventListener('touchstart', unlock, { passive: true });
+    document.addEventListener('touchend', unlock, { passive: true });
+    document.addEventListener('click', unlock, { passive: true });
+  }
+
+  handleVisibility() {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.ctx) {
+        if (this.ctx.state === 'suspended' || this.ctx.state === 'interrupted') {
+          this.ctx.resume().catch(() => {});
+        }
+      }
+    });
   }
 
   init() {
     if (!this.ctx) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioContext();
+      if (AudioContext) {
+        this.ctx = new AudioContext();
+      }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    if (this.ctx && (this.ctx.state === 'suspended' || this.ctx.state === 'interrupted')) {
+      this.ctx.resume().catch(() => {});
     }
   }
 

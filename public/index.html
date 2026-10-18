@@ -11,7 +11,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="/css/style.css?v=2.5" />
+  <link rel="stylesheet" href="/css/style.css?v=2.8" />
   <script>
     tailwind.config = {
       theme: {
@@ -29,7 +29,7 @@
   <div id="appWrapper" class="app-layout">
 
   <!-- ================= TOP NAVIGATION BAR ================= -->
-  <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-2.5 sm:px-4 z-40 flex-shrink-0 shadow-sm gap-1.5 sm:gap-2">
+  <header class="min-h-14 bg-white border-b border-slate-200 flex items-center justify-between px-2.5 sm:px-4 z-40 flex-shrink-0 shadow-sm gap-1.5 sm:gap-2">
     <div class="flex items-center space-x-2 flex-shrink-0">
       <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-base shadow-sm flex-shrink-0">
         N
@@ -47,12 +47,12 @@
 
       <!-- Sound toggle -->
       <button id="btnSoundToggle" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95 border border-slate-200/80" title="Âm thanh">
-        <i id="iconSound" data-lucide="volume-2" class="w-4.5 h-4.5"></i>
+        <i id="iconSound" data-lucide="volume-2" class="w-[18px] h-[18px]"></i>
       </button>
 
       <!-- Rules toggle -->
       <button id="btnOpenRules" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95 border border-slate-200/80" title="Luật chơi">
-        <i data-lucide="help-circle" class="w-4.5 h-4.5"></i>
+        <i data-lucide="help-circle" class="w-[18px] h-[18px]"></i>
       </button>
 
       <!-- Exit room button -->
@@ -66,8 +66,9 @@
   <main class="flex-1 min-h-0 flex flex-col relative max-w-2xl w-full mx-auto p-2 sm:p-3 overflow-hidden">
 
     <!-- VIEW 1: LOBBY -->
-    <section id="viewLobby" class="flex-1 min-h-0 flex items-center justify-center p-2 overflow-y-auto">
-      <div class="w-full max-w-[390px] sm:max-w-[420px] bg-white border border-slate-200/90 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3.5 my-auto">
+    <section id="viewLobby" class="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3">
+      <div class="min-h-full flex items-center justify-center py-2 w-full">
+        <div class="w-full max-w-[390px] sm:max-w-[420px] bg-white border border-slate-200/90 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3.5">
         
         <!-- Player Profile -->
         <div class="space-y-2.5">
@@ -98,7 +99,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tên người chơi</label>
-            <input id="inputNickname" type="text" maxlength="15" value="Bé Út" placeholder="Nhập tên..." class="w-full text-center px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-semibold focus:outline-none focus:border-blue-500 focus:bg-white transition text-sm sm:text-base" />
+            <input id="inputNickname" type="text" maxlength="15" value="Bé Út" placeholder="Nhập tên..." class="w-full text-center px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-semibold focus:outline-none focus:border-blue-500 focus:bg-white transition text-base" />
           </div>
         </div>
 
@@ -196,11 +197,13 @@
         </div>
 
       </div>
+      </div> <!-- end min-h-full wrapper -->
     </section>
 
     <!-- VIEW 2: WAITING ROOM -->
-    <section id="viewWaitingRoom" class="hidden flex-1 min-h-0 flex flex-col items-center justify-center p-2 overflow-y-auto">
-      <div class="w-full max-w-[390px] sm:max-w-[420px] bg-white border border-slate-200/90 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3.5 my-auto">
+    <section id="viewWaitingRoom" class="hidden flex-1 min-h-0 overflow-y-auto p-2 sm:p-3">
+      <div class="min-h-full flex items-center justify-center py-2 w-full">
+        <div class="w-full max-w-[390px] sm:max-w-[420px] bg-white border border-slate-200/90 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3.5">
         
         <!-- Header Info -->
         <div class="text-center space-y-2 border-b border-slate-100 pb-3">
@@ -254,6 +257,7 @@
         </div>
 
       </div>
+      </div> <!-- end min-h-full wrapper -->
     </section>
 
     <!-- VIEW 3: ACTIVE GAME BOARD -->
@@ -297,19 +301,19 @@
       <div id="chatFeed" class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-3.5 space-y-2 bg-slate-50/80 scroll-smooth"></div>
 
       <!-- Match Ended Floating Action Banner -->
-      <div id="matchEndedBanner" class="hidden bg-amber-50 border-t border-b border-amber-200 px-3 py-2 flex items-center justify-between gap-2 z-20 flex-shrink-0">
+      <div id="matchEndedBanner" class="hidden bg-amber-50 border-t border-b border-amber-200 px-3 py-2 flex items-center justify-between gap-2 z-20 flex-shrink-0 flex-wrap sm:flex-nowrap">
         <div class="flex items-center space-x-1.5 min-w-0">
           <span class="text-base flex-shrink-0">🏆</span>
-          <span class="text-xs sm:text-sm font-bold text-amber-900 truncate">Ván đấu đã kết thúc!</span>
+          <span class="text-xs sm:text-sm font-bold text-amber-900 truncate">Ván đấu kết thúc!</span>
         </div>
-        <div class="flex items-center space-x-1.5 flex-shrink-0">
-          <button id="btnBannerPlayAgain" type="button" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition active:scale-95">
+        <div class="flex items-center space-x-1.5 flex-shrink-0 ml-auto">
+          <button id="btnBannerPlayAgain" type="button" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition active:scale-95 whitespace-nowrap">
             🎮 Chơi lại
           </button>
-          <button id="btnBannerReturnLobby" type="button" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs sm:text-sm transition active:scale-95">
+          <button id="btnBannerReturnLobby" type="button" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs sm:text-sm transition active:scale-95 whitespace-nowrap">
             🏠 Phòng chờ
           </button>
-          <button id="btnBannerLeaveRoom" type="button" class="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs sm:text-sm transition active:scale-95">
+          <button id="btnBannerLeaveRoom" type="button" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs sm:text-sm transition active:scale-95 whitespace-nowrap">
             🚪 Thoát
           </button>
         </div>
@@ -346,7 +350,7 @@
               autocapitalize="none"
               autocorrect="off"
               spellcheck="false"
-              class="flex-1 bg-transparent px-1 py-1 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none font-semibold min-w-0" 
+              class="flex-1 bg-transparent px-1 py-1 text-base text-slate-900 placeholder-slate-400 focus:outline-none font-semibold min-w-0" 
             />
           </div>
           <button 
@@ -367,16 +371,16 @@
   </div> <!-- end #appWrapper -->
 
   <!-- ================= MODAL: ROUND END ================= -->
-  <div id="modalRoundEnd" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-lg space-y-3.5">
-      <div class="text-center space-y-0.5">
+  <div id="modalRoundEnd" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-lg space-y-3.5 my-auto max-h-[92dvh] overflow-y-auto flex flex-col">
+      <div class="text-center space-y-0.5 flex-shrink-0">
         <h3 class="text-base sm:text-lg font-bold text-slate-900" id="roundEndTitle">Kết thúc hiệp</h3>
         <p class="text-xs sm:text-sm text-slate-500 font-medium" id="roundEndSubtitle">Điểm thưởng hiệp đấu đã được cộng</p>
       </div>
 
-      <div class="bg-slate-50 rounded-xl p-2.5 space-y-1.5 border border-slate-200/80 max-h-48 overflow-y-auto" id="roundLeaderboardList"></div>
+      <div class="bg-slate-50 rounded-xl p-2.5 space-y-1.5 border border-slate-200/80 max-h-48 overflow-y-auto flex-1" id="roundLeaderboardList"></div>
 
-      <div class="pt-0.5 space-y-1.5">
+      <div class="pt-0.5 space-y-1.5 flex-shrink-0">
         <button id="btnNextRound" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xs transition active:scale-98 flex items-center justify-center space-x-1.5">
           <span>Tiếp tục hiệp tiếp theo</span>
         </button>
@@ -391,10 +395,10 @@
   </div>
 
   <!-- ================= MODAL: PODIUM / MATCH FINISHED ================= -->
-  <div id="modalPodium" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-xl space-y-3.5">
+  <div id="modalPodium" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-xl space-y-3 my-auto max-h-[92dvh] overflow-y-auto flex flex-col">
       
-      <div>
+      <div class="flex-shrink-0">
         <div class="inline-flex items-center space-x-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold mb-1.5">
           <span>🏆</span>
           <span>Hết ván đấu</span>
@@ -406,7 +410,7 @@
       </div>
 
       <!-- 3D OLYMPIC PODIUM -->
-      <div class="pt-2 pb-1 flex items-end justify-center space-x-2" id="podiumContainer">
+      <div class="pt-2 pb-1 flex items-end justify-center space-x-2 flex-shrink-0" id="podiumContainer">
         <!-- Rank 2 -->
         <div class="flex-1 flex flex-col items-center">
           <div class="text-2xl" id="podium2Avatar">🐱</div>
@@ -442,9 +446,9 @@
       </div>
 
       <!-- Other Ranks List -->
-      <div id="podiumOtherList" class="space-y-1.5 text-xs sm:text-sm text-left max-h-32 overflow-y-auto pr-1"></div>
+      <div id="podiumOtherList" class="space-y-1.5 text-xs sm:text-sm text-left max-h-32 overflow-y-auto pr-1 flex-1"></div>
 
-      <div class="pt-1 space-y-1.5">
+      <div class="pt-1 space-y-1.5 flex-shrink-0">
         <button id="btnPlayAgainMatch" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xs transition active:scale-98 flex items-center justify-center space-x-1.5">
           <span>🎮 Chơi ván mới ngay</span>
         </button>
@@ -463,35 +467,35 @@
   </div>
 
   <!-- ================= MODAL: QR CODE ================= -->
-  <div id="modalQrCode" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-xs bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-lg space-y-3">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+  <div id="modalQrCode" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-xs bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-lg space-y-3 my-auto max-h-[92dvh] overflow-y-auto flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2 flex-shrink-0">
         <h3 class="text-sm sm:text-base font-bold text-slate-800">Quét mã vào phòng</h3>
-        <button id="btnCloseQrCode" class="text-slate-400 hover:text-slate-600 p-1">
+        <button id="btnCloseQrCode" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition active:scale-95" title="Đóng">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
-      <div class="p-2 border border-slate-200 rounded-xl mx-auto inline-block">
+      <div class="p-2 border border-slate-200 rounded-xl mx-auto inline-block flex-shrink-0">
         <img id="qrCodeImg" src="" alt="Mã QR phòng" class="w-36 h-36 mx-auto block" />
       </div>
 
-      <p class="text-xs text-slate-500 font-medium">
+      <p class="text-xs text-slate-500 font-medium flex-shrink-0">
         Dùng camera điện thoại hoặc Zalo để quét mã và tham gia ngay.
       </p>
 
-      <button id="btnCopyMobileLink" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs sm:text-sm font-semibold text-slate-700 transition active:scale-98">
+      <button id="btnCopyMobileLink" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs sm:text-sm font-semibold text-slate-700 transition active:scale-98 flex-shrink-0">
         Sao chép liên kết
       </button>
     </div>
   </div>
 
   <!-- ================= MODAL: RULES ================= -->
-  <div id="modalRules" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 max-h-[90dvh] flex flex-col">
+  <div id="modalRules" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 my-auto max-h-[92dvh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2 flex-shrink-0">
         <h3 class="text-sm sm:text-base font-bold text-slate-900">Luật chơi & Nhóm từ bị cấm</h3>
-        <button id="btnCloseRules" class="text-slate-400 hover:text-slate-600 p-1">
+        <button id="btnCloseRules" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition active:scale-95" title="Đóng">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -499,7 +503,7 @@
       <div class="space-y-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed overflow-y-auto pr-1 flex-1">
         <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
           <span class="font-bold text-slate-800">1. Quy tắc nối từ 2 âm tiết:</span>
-          <p>Mỗi từ đưa ra phải có đúng 2 tiếng nằm trong từ điển tiếng Việt (~53.400 từ). Tiếng đầu của người sau phải trùng với tiếng cuối của người trước.</p>
+          <p>Mỗi từ đưa ra phải có đúng 2 tiếng nằm trong từ điển tiếng Việt (~54.000 từ). Tiếng đầu của người sau phải trùng với tiếng cuối của người trước.</p>
         </div>
 
         <div class="p-3 bg-rose-50 rounded-xl border border-rose-200 space-y-1 text-rose-900">
@@ -532,12 +536,33 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: CONFIRM LEAVE ROOM ================= -->
+  <div id="modalConfirmLeave" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="w-full max-w-xs bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-center shadow-xl space-y-3 my-auto">
+      <div class="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto text-2xl shadow-xs">
+        🚪
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-base font-bold text-slate-900">Rời khỏi phòng?</h3>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium">Bạn có chắc muốn rời ván đấu và quay về sảnh chính?</p>
+      </div>
+      <div class="pt-1 space-y-2">
+        <button id="btnConfirmLeaveYes" type="button" class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-xs transition active:scale-98">
+          Rời phòng
+        </button>
+        <button id="btnConfirmLeaveNo" type="button" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition active:scale-98">
+          Ở lại chơi tiếp
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toastContainer" class="fixed top-16 right-3 left-3 sm:left-auto sm:right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
   <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/sound.js?v=2.7"></script>
-  <script src="/js/app.js?v=2.7"></script>
+  <script src="/js/sound.js?v=2.8"></script>
+  <script src="/js/app.js?v=2.8"></script>
 </body>
 </html>

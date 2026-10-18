@@ -145,10 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnBannerReturnLobby = document.getElementById('btnBannerReturnLobby');
   const btnBannerLeaveRoom = document.getElementById('btnBannerLeaveRoom');
 
+  // Modals
   const modalRules = document.getElementById('modalRules');
   const btnOpenRules = document.getElementById('btnOpenRules');
   const btnCloseRules = document.getElementById('btnCloseRules');
   const btnAcknowledgeRules = document.getElementById('btnAcknowledgeRules');
+  const modalConfirmLeave = document.getElementById('modalConfirmLeave');
+  const btnConfirmLeaveYes = document.getElementById('btnConfirmLeaveYes');
+  const btnConfirmLeaveNo = document.getElementById('btnConfirmLeaveNo');
   const toastContainer = document.getElementById('toastContainer');
 
   // Avatar HTML Renderer (supports emojis & custom image avatars)
@@ -167,13 +171,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ================= MOBILE VIEWPORT & KEYBOARD FIX =================
   const rootStyle = document.documentElement.style;
+  let initialWindowHeight = window.innerHeight;
+  let lastWindowWidth = window.innerWidth;
+  let wasMyTurn = false;
 
   function updateViewport() {
     const vv = window.visualViewport;
     const height = vv ? vv.height : window.innerHeight;
 
-    // In iOS Safari, the browser may shift the layout viewport upward (window.scrollY > 0),
-    // or offset the visual viewport (vv.offsetTop > 0).
+    // Track baseline height on true orientation/resize changes (not keyboard)
+    if (Math.abs(window.innerWidth - lastWindowWidth) > 50) {
+      initialWindowHeight = window.innerHeight;
+      lastWindowWidth = window.innerWidth;
+    }
+
     const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
     const vvOffset = vv ? (vv.offsetTop || 0) : 0;
     const totalOffset = vvOffset + scrollY;
@@ -182,9 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
     rootStyle.setProperty('--vv-top', `${totalOffset}px`);
     rootStyle.setProperty('--vvh', `${height}px`);
 
-    // Detect if virtual keyboard is open on small mobile devices only
+    // Detect if virtual keyboard is open on small mobile devices (Android & iOS)
     const isSmallScreen = window.innerWidth <= 768;
-    const isHeightShrunk = vv ? (window.innerHeight - vv.height > 120) : false;
+    const heightDrop = Math.max(0, initialWindowHeight - height);
+    const isHeightShrunk = heightDrop > 100 || (vv && (window.innerHeight - vv.height > 100));
     const isKeyboardOpen = isSmallScreen && isHeightShrunk;
     document.body.classList.toggle('keyboard-open', isKeyboardOpen);
 
@@ -199,41 +211,31 @@ document.addEventListener('DOMContentLoaded', () => {
     window.visualViewport.addEventListener('scroll', updateViewport);
   }
   window.addEventListener('resize', updateViewport);
-  window.addEventListener('orientationchange', () => setTimeout(updateViewport, 200));
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      initialWindowHeight = window.innerHeight;
+      lastWindowWidth = window.innerWidth;
+      updateViewport();
+    }, 200);
+  });
   window.addEventListener('scroll', updateViewport);
   updateViewport();
 
-  // Reset any layout shift on focus and blur across all text inputs
+  // Reset any layout shift on focus and blur across all text inputs smoothly
   [inputWord, inputNickname, inputRoomCode].forEach(input => {
     if (!input) return;
     input.addEventListener('focus', () => {
       updateViewport();
-      // Counter Safari's native scroll animation across multiple frames
-      [30, 80, 150, 300].forEach(delay => {
-        setTimeout(() => {
-          if (window.scrollY !== 0 || window.scrollX !== 0) {
-            window.scrollTo(0, 0);
-          }
-          document.body.scrollTop = 0;
-          document.documentElement.scrollTop = 0;
-          updateViewport();
-        }, delay);
-      });
+      setTimeout(updateViewport, 120);
     });
 
     input.addEventListener('blur', () => {
       setTimeout(() => {
-        window.scrollTo(0, 0);
+        if (window.scrollY !== 0) window.scrollTo(0, 0);
         document.body.scrollTop = 0;
         document.documentElement.scrollTop = 0;
         updateViewport();
-      }, 50);
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
-        updateViewport();
-      }, 250);
+      }, 100);
     });
   });
 
@@ -248,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Prevent elastic rubber-banding outside scrollable containers on iOS
   document.addEventListener('touchmove', (e) => {
-    if (!e.target.closest('#chatFeed, .overflow-y-auto, .overflow-x-auto, input, textarea, select')) {
+    if (!e.target.closest('#chatFeed, .overflow-y-auto, .overflow-x-auto, input, textarea, select, [id^="modal"], .app-layout')) {
       e.preventDefault();
     }
   }, { passive: false });
@@ -592,11 +594,33 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(msg, 'success');
         window.soundManager.playPop();
       }).catch(() => {
-        prompt('Sao chép liên kết phòng:', text);
+        fallbackCopyText(text, msg);
       });
     } else {
-      prompt('Sao chép liên kết phòng:', text);
+      fallbackCopyText(text, msg);
     }
+  }
+
+  function fallbackCopyText(text, msg) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      ta.style.left = '-9999px';
+      ta.setAttribute('readonly', '');
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, 99999);
+      const successful = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (successful) {
+        showToast(msg, 'success');
+        window.soundManager.playPop();
+        return;
+      }
+    } catch (e) {}
+    showToast('Đã tạo liên kết phòng!', 'info');
   }
 
   btnStartGame.addEventListener('click', () => {
@@ -614,7 +638,32 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.emit('toggle_ready');
   });
 
+  // Custom Leave Confirmation Modal (Replaces native browser confirm on mobile)
+  function openConfirmLeaveModal() {
+    window.soundManager.playPop();
+    if (modalConfirmLeave) modalConfirmLeave.classList.remove('hidden');
+  }
+
+  function closeConfirmLeaveModal() {
+    if (modalConfirmLeave) modalConfirmLeave.classList.add('hidden');
+  }
+
+  if (btnConfirmLeaveYes) {
+    btnConfirmLeaveYes.addEventListener('click', () => {
+      closeConfirmLeaveModal();
+      handleLeaveRoom();
+    });
+  }
+
+  if (btnConfirmLeaveNo) {
+    btnConfirmLeaveNo.addEventListener('click', () => {
+      closeConfirmLeaveModal();
+      window.soundManager.playPop();
+    });
+  }
+
   function handleLeaveRoom() {
+    closeConfirmLeaveModal();
     window.soundManager.playPop();
     socket.emit('leave_room');
     clearRoomStorage();
@@ -634,35 +683,10 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Đã rời khỏi phòng', 'info');
   }
 
-  btnLeaveRoom.addEventListener('click', () => {
-    if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
-      handleLeaveRoom();
-    }
-  });
-
-  if (btnRoundLeaveRoom) {
-    btnRoundLeaveRoom.addEventListener('click', () => {
-      if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
-        handleLeaveRoom();
-      }
-    });
-  }
-
-  if (btnPodiumLeaveRoom) {
-    btnPodiumLeaveRoom.addEventListener('click', () => {
-      if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
-        handleLeaveRoom();
-      }
-    });
-  }
-
-  if (btnBannerLeaveRoom) {
-    btnBannerLeaveRoom.addEventListener('click', () => {
-      if (confirm('Bạn có chắc muốn rời khỏi phòng này?')) {
-        handleLeaveRoom();
-      }
-    });
-  }
+  btnLeaveRoom.addEventListener('click', openConfirmLeaveModal);
+  if (btnRoundLeaveRoom) btnRoundLeaveRoom.addEventListener('click', openConfirmLeaveModal);
+  if (btnPodiumLeaveRoom) btnPodiumLeaveRoom.addEventListener('click', openConfirmLeaveModal);
+  if (btnBannerLeaveRoom) btnBannerLeaveRoom.addEventListener('click', openConfirmLeaveModal);
 
   // ================= GAMEPLAY ACTIONS =================
   formWordSubmit.addEventListener('submit', (e) => {
@@ -692,6 +716,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.soundManager.playPop();
     socket.emit('submit_word', fullWord.normalize('NFC'));
     inputWord.value = '';
+
+    // On mobile touch devices, blur input so virtual keyboard closes gracefully before input is disabled
+    if (window.innerWidth <= 768 || ('ontouchstart' in window)) {
+      inputWord.blur();
+    }
 
     requestAnimationFrame(() => {
       chatFeed.scrollTop = chatFeed.scrollHeight;
@@ -809,6 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modalPodium) modalPodium.classList.add('hidden');
     if (matchEndedBanner) matchEndedBanner.classList.add('hidden');
     if (modalQrCode) modalQrCode.classList.add('hidden');
+    if (modalConfirmLeave) modalConfirmLeave.classList.add('hidden');
     if (navRoomBadge) navRoomBadge.classList.add('hidden');
     if (inputRoomCode) inputRoomCode.value = '';
     if (inputWord) inputWord.value = '';
@@ -997,6 +1027,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Control input box availability & Prefix pill (ONLY show prefix on MY turn)
     const isMyTurn = activePlayer && (activePlayer.id === myId || (activePlayer.sessionToken && activePlayer.sessionToken === mySessionToken)) && me && me.isAlive;
+    const isNewTurnForMe = isMyTurn && !wasMyTurn;
+    wasMyTurn = !!isMyTurn;
     
     if (isMyTurn && room.expectedSyllable) {
       inputPrefixBadge.classList.remove('hidden');
@@ -1011,11 +1043,17 @@ document.addEventListener('DOMContentLoaded', () => {
       inputWord.disabled = false;
       btnSendWord.disabled = false;
       inputWord.placeholder = 'Gõ tiếng tiếp theo (hoặc cả từ)...';
-      if (document.activeElement !== inputWord) {
-        try {
-          inputWord.focus({ preventScroll: true });
-        } catch (e) {
-          inputWord.focus();
+      // Only auto-focus once upon turn start, and only if no modal is active
+      if (isNewTurnForMe && document.activeElement !== inputWord) {
+        const isModalOpen = (modalRules && !modalRules.classList.contains('hidden')) ||
+                            (modalConfirmLeave && !modalConfirmLeave.classList.contains('hidden')) ||
+                            (modalQrCode && !modalQrCode.classList.contains('hidden'));
+        if (!isModalOpen) {
+          try {
+            inputWord.focus({ preventScroll: true });
+          } catch (e) {
+            inputWord.focus();
+          }
         }
       }
     } else {
